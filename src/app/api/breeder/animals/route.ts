@@ -100,3 +100,25 @@ export async function PATCH(request: Request) {
 
   return NextResponse.json({ animal: updated });
 }
+
+export async function DELETE(request: Request) {
+  const auth = await requireFarmAccess(farmIdFromRequest(request));
+  if (!auth) {
+    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+  }
+
+  const id = new URL(request.url).searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "נתונים לא תקינים" }, { status: 400 });
+  }
+
+  const animal = await prisma.animal.findFirst({
+    where: { id, breederId: auth.breeder.id },
+  });
+  if (!animal) {
+    return NextResponse.json({ error: "חיה לא נמצאה" }, { status: 404 });
+  }
+
+  await prisma.animal.delete({ where: { id: animal.id } });
+  return NextResponse.json({ ok: true });
+}

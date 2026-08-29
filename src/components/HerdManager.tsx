@@ -168,6 +168,21 @@ export function HerdManager({ locale, farmId }: Props) {
     load();
   }
 
+  async function deleteAnimal(animal: Animal) {
+    if (!window.confirm(t(locale, "confirmDeleteAnimal", { number: animal.number }))) {
+      return;
+    }
+    setError("");
+    const params = new URLSearchParams({ id: animal.id });
+    if (farmId) params.set("farmId", farmId);
+    const res = await fetch(`/api/breeder/animals?${params}`, { method: "DELETE" });
+    if (!res.ok) {
+      setError(t(locale, "updateFailed"));
+      return;
+    }
+    load();
+  }
+
   async function addVaccine(animalId: string, e: FormEvent) {
     e.preventDefault();
     const draft = vaccineDrafts[animalId];
@@ -356,6 +371,13 @@ export function HerdManager({ locale, farmId }: Props) {
                           </label>
                         ) : null}
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => deleteAnimal(animal)}
+                        className="rounded-xl border border-red-400/30 px-3 py-1.5 text-sm text-red-200"
+                      >
+                        {t(locale, "deleteAnimal")}
+                      </button>
                     </div>
 
                     <div className="mt-4">

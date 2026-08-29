@@ -241,6 +241,8 @@ const he = {
   vaccineDate: "תאריך חיסון",
   cancel: "ביטול",
   needClinicVaccine: "קודם יש להוסיף חיסונים מהלוח של הווטרינר",
+  deleteAnimal: "מחיקת חיה",
+  confirmDeleteAnimal: "למחוק את מספר {number} מהקבוצה?",
 } as const;
 
 const ar: { [K in keyof typeof he]: string } = {
@@ -478,6 +480,8 @@ const ar: { [K in keyof typeof he]: string } = {
   vaccineDate: "تاريخ التطعيم",
   cancel: "إلغاء",
   needClinicVaccine: "يجب إضافة التطعيمات أولًا من لوحة الطبيب البيطري",
+  deleteAnimal: "حذف الحيوان",
+  confirmDeleteAnimal: "حذف الرقم {number} من المجموعة؟",
 };
 
 const dict = { he, ar } as const;
