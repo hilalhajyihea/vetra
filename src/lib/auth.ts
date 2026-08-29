@@ -16,7 +16,17 @@ export type PlatformSession = {
   username: string;
 };
 
-export type SessionPayload = VetSession | PlatformSession;
+export type BreederSession = {
+  kind: "breeder";
+  breederId: string;
+  vetId: string;
+  slug: string;
+  firstName: string;
+  lastName: string;
+  farmName: string;
+};
+
+export type SessionPayload = VetSession | PlatformSession | BreederSession;
 
 function getSecret() {
   const secret = process.env.AUTH_SECRET;
@@ -60,6 +70,27 @@ export async function verifySessionToken(
       if (typeof payload.username !== "string") return null;
       return { kind: "platform", username: payload.username };
     }
+    if (payload.kind === "breeder") {
+      if (
+        typeof payload.breederId !== "string" ||
+        typeof payload.vetId !== "string" ||
+        typeof payload.slug !== "string" ||
+        typeof payload.firstName !== "string" ||
+        typeof payload.lastName !== "string" ||
+        typeof payload.farmName !== "string"
+      ) {
+        return null;
+      }
+      return {
+        kind: "breeder",
+        breederId: payload.breederId,
+        vetId: payload.vetId,
+        slug: payload.slug,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        farmName: payload.farmName,
+      };
+    }
     return null;
   } catch {
     return null;
@@ -92,6 +123,13 @@ export async function getSession(): Promise<SessionPayload | null> {
 export async function requireVetSession(slug?: string) {
   const session = await getSession();
   if (!session || session.kind !== "vet") return null;
+  if (slug && session.slug !== slug) return null;
+  return session;
+}
+
+export async function requireBreederSession(slug?: string) {
+  const session = await getSession();
+  if (!session || session.kind !== "breeder") return null;
   if (slug && session.slug !== slug) return null;
   return session;
 }

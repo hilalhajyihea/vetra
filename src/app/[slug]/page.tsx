@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { VetComingSoon } from "@/components/VetComingSoon";
+import { notFound, redirect } from "next/navigation";
+import { ClinicHome } from "@/components/ClinicHome";
+import { getSession } from "@/lib/auth";
 import { normalizeLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { vetShareMetadata } from "@/lib/seo";
@@ -35,8 +36,13 @@ export default async function VetPublicPage({ params }: Props) {
   });
   if (!vet || !vet.isActive) notFound();
 
+  const session = await getSession();
+  if (session?.kind === "breeder" && session.slug === slug) {
+    redirect(`/${slug}/breeder`);
+  }
+
   return (
-    <VetComingSoon
+    <ClinicHome
       slug={vet.slug}
       displayName={vet.displayName}
       clinicName={vet.clinicName}

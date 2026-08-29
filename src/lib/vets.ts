@@ -8,6 +8,8 @@ export const RESERVED_SLUGS = new Set([
   "login",
   "_next",
   "favicon.ico",
+  "register",
+  "breeder",
 ]);
 
 export function isValidSlug(slug: string) {

@@ -22,4 +22,28 @@ model Veterinarian {
   plan         String   @default("BASE")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  breeders Breeder[]
+}
+
+model Breeder {
+  id              String    @id @default(cuid())
+  veterinarianId  String
+  firstName       String
+  lastName        String
+  farmName        String
+  /// Normalized local Israeli mobile, e.g. 0501234567
+  phone           String
+  email           String
+  passwordHash    String
+  /// PENDING | APPROVED | REJECTED
+  status          String    @default("PENDING")
+  approvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  veterinarian Veterinarian @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
+
+  @@unique([veterinarianId, phone])
+  @@index([veterinarianId, status])
 }

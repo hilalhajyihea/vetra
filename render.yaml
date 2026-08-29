@@ -1,4 +1,11 @@
 # Render Blueprint — https://render.com/docs/blueprint-spec
+databases:
+  - name: vetra-db
+    databaseName: vetra
+    user: vetra
+    plan: free
+    region: frankfurt
+
 services:
   - type: web
     name: vetra
@@ -12,10 +19,16 @@ services:
       - key: NODE_VERSION
         value: "22"
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: vetra-db
+          property: connectionString
       - key: AUTH_SECRET
         generateValue: true
       - key: PLATFORM_USERNAME
         value: admin
       - key: PLATFORM_PASSWORD
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: NEXT_PUBLIC_SITE_URL
         sync: false
