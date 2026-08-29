@@ -174,13 +174,21 @@ export function VetAdminPanel({
         ) : (
           <ul className="mt-4 space-y-3">
             {approved.map((b) => (
-              <li key={b.id} className="surface-dark rounded-2xl p-4">
-                <p className="font-semibold">
-                  {b.firstName} {b.lastName}
-                </p>
-                <p className="text-sm text-[rgba(244,239,230,0.62)]">
-                  {b.farmName} · {b.phone} · {b.email}
-                </p>
+              <li key={b.id}>
+                <Link
+                  href={`/${slug}/admin/farm/${b.id}/herd`}
+                  className="surface-dark block rounded-2xl p-4 transition hover:border-[var(--hay)] hover:bg-white/5"
+                >
+                  <p className="font-semibold">
+                    {b.firstName} {b.lastName}
+                  </p>
+                  <p className="text-sm text-[rgba(244,239,230,0.62)]">
+                    {b.farmName} · {b.phone} · {b.email}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-[var(--hay)]">
+                    {t(locale, "openFarm")}
+                  </p>
+                </Link>
               </li>
             ))}
           </ul>

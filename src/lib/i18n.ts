@@ -216,6 +216,9 @@ const he = {
   errBirthFuture: "תאריך הלידה לא יכול להיות בעתיד",
   save: "שמירה",
   groupCount: "{count} חיות",
+  openFarm: "כניסה לדף המגדל",
+  backToBreeders: "חזרה למגדלים",
+  viewingAsVet: "צפייה כווטרינר — אותו דף כמו המגדל",
 } as const;
 
 const ar: { [K in keyof typeof he]: string } = {
@@ -428,6 +431,9 @@ const ar: { [K in keyof typeof he]: string } = {
   errBirthFuture: "تاريخ الولادة لا يمكن أن يكون في المستقبل",
   save: "حفظ",
   groupCount: "{count} حيوانات",
+  openFarm: "دخول صفحة المربّي",
+  backToBreeders: "العودة إلى المربّين",
+  viewingAsVet: "عرض كطبيب — نفس صفحة المربّي",
 };
 
 const dict = { he, ar } as const;

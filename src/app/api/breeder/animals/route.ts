@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireApprovedBreeder } from "@/lib/breederSession";
+import { farmIdFromRequest, requireFarmAccess } from "@/lib/breederSession";
 import { jerusalemTodayKey, toDateKey } from "@/lib/herd";
 import { prisma } from "@/lib/prisma";
 
@@ -13,12 +13,12 @@ const createSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const auth = await requireApprovedBreeder();
+  const body = await request.json();
+  const auth = await requireFarmAccess(farmIdFromRequest(request, body));
   if (!auth) {
     return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
   }
 
-  const body = await request.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "נתונים לא תקינים" }, { status: 400 });
@@ -69,12 +69,12 @@ const patchSchema = z.object({
 });
 
 export async function PATCH(request: Request) {
-  const auth = await requireApprovedBreeder();
+  const body = await request.json();
+  const auth = await requireFarmAccess(farmIdFromRequest(request, body));
   if (!auth) {
     return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
   }
 
-  const body = await request.json();
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "נתונים לא תקינים" }, { status: 400 });

@@ -21,6 +21,8 @@ type Props = {
   farmName: string;
   clinicLabel: string;
   children: React.ReactNode;
+  basePath?: string;
+  viewer?: "breeder" | "vet";
 };
 
 export function BreederShell({
@@ -31,10 +33,12 @@ export function BreederShell({
   farmName,
   clinicLabel,
   children,
+  basePath,
+  viewer = "breeder",
 }: Props) {
   const pathname = usePathname();
   const router = useRouter();
-  const base = `/${slug}/breeder`;
+  const base = basePath || `/${slug}/breeder`;
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -54,14 +58,31 @@ export function BreederShell({
             <span className="mr-2 text-[rgba(244,239,230,0.55)]">· {farmName}</span>
           </p>
         </div>
-        <button
-          type="button"
-          onClick={logout}
-          className="rounded-xl border border-white/20 px-4 py-2 text-sm"
-        >
-          {t(locale, "logout")}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {viewer === "vet" ? (
+            <Link
+              href={`/${slug}/admin`}
+              className="rounded-xl border border-white/20 px-4 py-2 text-sm"
+            >
+              {t(locale, "backToBreeders")}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded-xl border border-white/20 px-4 py-2 text-sm"
+            >
+              {t(locale, "logout")}
+            </button>
+          )}
+        </div>
       </div>
+
+      {viewer === "vet" ? (
+        <p className="mb-4 rounded-xl border border-[var(--hay)]/40 bg-[var(--hay)]/10 px-4 py-2 text-sm text-[var(--hay)]">
+          {t(locale, "viewingAsVet")}
+        </p>
+      ) : null}
 
       <nav className="flex flex-wrap gap-2">
         {NAV.map((item) => {

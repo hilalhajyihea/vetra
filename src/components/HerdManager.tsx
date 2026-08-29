@@ -34,9 +34,16 @@ type Group = {
 type Props = {
   slug: string;
   locale: Locale;
+  farmId?: string;
 };
 
-export function HerdManager({ locale }: Props) {
+function withFarm(path: string, farmId?: string) {
+  if (!farmId) return path;
+  const join = path.includes("?") ? "&" : "?";
+  return `${path}${join}farmId=${encodeURIComponent(farmId)}`;
+}
+
+export function HerdManager({ locale, farmId }: Props) {
   const router = useRouter();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +62,7 @@ export function HerdManager({ locale }: Props) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/breeder/groups");
+      const res = await fetch(withFarm("/api/breeder/groups", farmId));
       if (res.status === 401) {
         router.refresh();
         return;
@@ -69,7 +76,7 @@ export function HerdManager({ locale }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [locale, router]);
+  }, [farmId, locale, router]);
 
   useEffect(() => {
     load();
@@ -92,7 +99,7 @@ export function HerdManager({ locale }: Props) {
     const res = await fetch("/api/breeder/groups", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: groupName }),
+      body: JSON.stringify({ name: groupName, farmId }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -120,6 +127,7 @@ export function HerdManager({ locale }: Props) {
         sex,
         birthDate,
         pregnant: sex === "FEMALE" ? pregnant : false,
+        farmId,
       }),
     });
     const data = await res.json();
@@ -145,7 +153,7 @@ export function HerdManager({ locale }: Props) {
     const res = await fetch("/api/breeder/animals", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: animal.id, pregnant: next }),
+      body: JSON.stringify({ id: animal.id, pregnant: next, farmId }),
     });
     if (!res.ok) {
       setError(t(locale, "updateFailed"));
@@ -166,6 +174,7 @@ export function HerdManager({ locale }: Props) {
         animalId,
         name: draft.name,
         validUntil: draft.validUntil,
+        farmId,
       }),
     });
     if (!res.ok) {
