@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandGraphics";
+import { VaccineCatalogEditor } from "@/components/VaccineCatalogEditor";
 import { t, type Locale } from "@/lib/i18n";
 
 type BreederRow = {
@@ -120,6 +121,8 @@ export function VetAdminPanel({
       {message ? (
         <p className="mt-4 text-sm text-[var(--hay)]">{message}</p>
       ) : null}
+
+      <VaccineCatalogEditor locale={locale} />
 
       <section className="mt-10">
         <h2 className="font-display text-2xl text-[var(--cream)]">

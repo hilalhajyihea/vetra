@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 
 const createSchema = z.object({
   animalId: z.string().min(1),
-  name: z.string().min(1).max(80),
+  vaccineTypeId: z.string().min(1).optional(),
+  name: z.string().min(1).max(80).optional(),
   validUntil: z.string().min(8),
 });
 
@@ -29,14 +30,51 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "חיה לא נמצאה" }, { status: 404 });
   }
 
+  const type = parsed.data.vaccineTypeId
+    ? await prisma.vaccineType.findFirst({
+        where: {
+          id: parsed.data.vaccineTypeId,
+          veterinarianId: auth.breeder.veterinarianId,
+        },
+      })
+    : parsed.data.name
+      ? await prisma.vaccineType.findFirst({
+          where: {
+            veterinarianId: auth.breeder.veterinarianId,
+            name: parsed.data.name.trim(),
+          },
+        })
+      : null;
+  if (!type) {
+    return NextResponse.json({ error: "VACCINE_UNKNOWN" }, { status: 400 });
+  }
+
   const validUntil = toDateKey(parsed.data.validUntil);
-  const vaccination = await prisma.animalVaccination.create({
-    data: {
+  const existing = await prisma.animalVaccination.findFirst({
+    where: {
       animalId: animal.id,
-      name: parsed.data.name.trim(),
-      validUntil: new Date(`${validUntil}T00:00:00.000Z`),
+      OR: [{ vaccineTypeId: type.id }, { name: type.name }],
     },
+    orderBy: { validUntil: "desc" },
   });
+
+  const data = {
+    vaccineTypeId: type.id,
+    name: type.name,
+    validUntil: new Date(`${validUntil}T00:00:00.000Z`),
+  };
+
+  const vaccination = existing
+    ? await prisma.animalVaccination.update({
+        where: { id: existing.id },
+        data,
+      })
+    : await prisma.animalVaccination.create({
+        data: {
+          animalId: animal.id,
+          ...data,
+        },
+      });
 
   return NextResponse.json({ vaccination });
 }

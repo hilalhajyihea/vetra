@@ -2,12 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  VACCINE_SUGGESTIONS,
-  formatAge,
-  isVaccineValid,
-  toDateKey,
-} from "@/lib/herd";
+import { formatAge, formatIsraelDate, isVaccineValid } from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
 
 type Vaccine = {
@@ -29,6 +24,11 @@ type Group = {
   id: string;
   name: string;
   animals: Animal[];
+};
+
+type VaccineType = {
+  id: string;
+  name: string;
 };
 
 type Props = {
@@ -55,21 +55,27 @@ export function HerdManager({ locale, farmId }: Props) {
   const [birthDate, setBirthDate] = useState("");
   const [pregnant, setPregnant] = useState(false);
   const [groupId, setGroupId] = useState("");
+  const [vaccineTypes, setVaccineTypes] = useState<VaccineType[]>([]);
   const [vaccineDrafts, setVaccineDrafts] = useState<
-    Record<string, { name: string; validUntil: string }>
+    Record<string, { vaccineTypeId: string; validUntil: string }>
   >({});
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(withFarm("/api/breeder/groups", farmId));
-      if (res.status === 401) {
+      const [groupsRes, typesRes] = await Promise.all([
+        fetch(withFarm("/api/breeder/groups", farmId)),
+        fetch(withFarm("/api/breeder/vaccine-types", farmId)),
+      ]);
+      if (groupsRes.status === 401 || typesRes.status === 401) {
         router.refresh();
         return;
       }
-      const data = await res.json();
+      const data = await groupsRes.json();
+      const typesData = await typesRes.json();
       const list: Group[] = data.groups || [];
       setGroups(list);
+      setVaccineTypes(typesData.vaccines || []);
       setGroupId((prev) => prev || list[0]?.id || "");
     } catch {
       setError(t(locale, "loadError"));
@@ -165,14 +171,14 @@ export function HerdManager({ locale, farmId }: Props) {
   async function addVaccine(animalId: string, e: FormEvent) {
     e.preventDefault();
     const draft = vaccineDrafts[animalId];
-    if (!draft?.name || !draft.validUntil) return;
+    if (!draft?.vaccineTypeId || !draft.validUntil) return;
     setError("");
     const res = await fetch("/api/breeder/vaccinations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         animalId,
-        name: draft.name,
+        vaccineTypeId: draft.vaccineTypeId,
         validUntil: draft.validUntil,
         farmId,
       }),
@@ -183,7 +189,7 @@ export function HerdManager({ locale, farmId }: Props) {
     }
     setVaccineDrafts((prev) => ({
       ...prev,
-      [animalId]: { name: "", validUntil: "" },
+      [animalId]: { vaccineTypeId: "", validUntil: "" },
     }));
     load();
   }
@@ -366,7 +372,7 @@ export function HerdManager({ locale, farmId }: Props) {
                                   : "bg-red-900/70 text-red-200"
                               }`}
                             >
-                              {v.name} · {toDateKey(v.validUntil)} ·{" "}
+                              {v.name} · {formatIsraelDate(v.validUntil)} ·{" "}
                               {valid
                                 ? t(locale, "vaccineValid")
                                 : t(locale, "vaccineExpired")}
@@ -374,48 +380,60 @@ export function HerdManager({ locale, farmId }: Props) {
                           );
                         })}
                       </ul>
-                      <form
-                        onSubmit={(e) => addVaccine(animal.id, e)}
-                        className="mt-3 flex flex-wrap items-end gap-2"
-                      >
-                        <input
-                          className="shop-field min-w-36 flex-1 rounded-xl px-3 py-2 text-sm"
-                          placeholder={t(locale, "vaccineName")}
-                          list="vetra-vaccines"
-                          value={vaccineDrafts[animal.id]?.name || ""}
-                          onChange={(e) =>
-                            setVaccineDrafts((prev) => ({
-                              ...prev,
-                              [animal.id]: {
-                                name: e.target.value,
-                                validUntil: prev[animal.id]?.validUntil || "",
-                              },
-                            }))
-                          }
-                          required
-                        />
-                        <input
-                          type="date"
-                          className="shop-field rounded-xl px-3 py-2 text-sm"
-                          value={vaccineDrafts[animal.id]?.validUntil || ""}
-                          onChange={(e) =>
-                            setVaccineDrafts((prev) => ({
-                              ...prev,
-                              [animal.id]: {
-                                name: prev[animal.id]?.name || "",
-                                validUntil: e.target.value,
-                              },
-                            }))
-                          }
-                          required
-                        />
-                        <button
-                          type="submit"
-                          className="btn-primary rounded-xl px-3 py-2 text-sm font-semibold"
+                      {vaccineTypes.length === 0 ? (
+                        <p className="mt-3 text-sm text-[rgba(244,239,230,0.62)]">
+                          {t(locale, "needClinicVaccine")}
+                        </p>
+                      ) : (
+                        <form
+                          onSubmit={(e) => addVaccine(animal.id, e)}
+                          className="mt-3 flex flex-wrap items-end gap-2"
                         >
-                          {t(locale, "addVaccine")}
-                        </button>
-                      </form>
+                          <select
+                            className="shop-field min-w-36 flex-1 rounded-xl px-3 py-2 text-sm"
+                            value={vaccineDrafts[animal.id]?.vaccineTypeId || ""}
+                            onChange={(e) =>
+                              setVaccineDrafts((prev) => ({
+                                ...prev,
+                                [animal.id]: {
+                                  vaccineTypeId: e.target.value,
+                                  validUntil: prev[animal.id]?.validUntil || "",
+                                },
+                              }))
+                            }
+                            required
+                          >
+                            <option value="">{t(locale, "vaccineName")}</option>
+                            {vaccineTypes.map((type) => (
+                              <option key={type.id} value={type.id}>
+                                {type.name}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="date"
+                            className="shop-field rounded-xl px-3 py-2 text-sm"
+                            value={vaccineDrafts[animal.id]?.validUntil || ""}
+                            onChange={(e) =>
+                              setVaccineDrafts((prev) => ({
+                                ...prev,
+                                [animal.id]: {
+                                  vaccineTypeId:
+                                    prev[animal.id]?.vaccineTypeId || "",
+                                  validUntil: e.target.value,
+                                },
+                              }))
+                            }
+                            required
+                          />
+                          <button
+                            type="submit"
+                            className="btn-primary rounded-xl px-3 py-2 text-sm font-semibold"
+                          >
+                            {t(locale, "addVaccine")}
+                          </button>
+                        </form>
+                      )}
                     </div>
                   </li>
                 ))}
@@ -424,11 +442,6 @@ export function HerdManager({ locale, farmId }: Props) {
           </section>
         ))}
       </div>
-      <datalist id="vetra-vaccines">
-        {VACCINE_SUGGESTIONS.map((name) => (
-          <option key={name} value={name} />
-        ))}
-      </datalist>
     </div>
   );
 }

@@ -23,7 +23,8 @@ model Veterinarian {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  breeders Breeder[]
+  breeders    Breeder[]
+  vaccineTypes VaccineType[]
 }
 
 model Breeder {
@@ -85,14 +86,32 @@ model Animal {
   @@index([groupId])
 }
 
-model AnimalVaccination {
-  id         String   @id @default(cuid())
-  animalId   String
-  name       String
-  validUntil DateTime @db.Date
-  createdAt  DateTime @default(now())
+model VaccineType {
+  id             String   @id @default(cuid())
+  veterinarianId String
+  name           String
+  description    String   @default("")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  veterinarian Veterinarian        @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
+  records      AnimalVaccination[]
+
+  @@unique([veterinarianId, name])
+  @@index([veterinarianId])
+}
+
+model AnimalVaccination {
+  id            String   @id @default(cuid())
+  animalId      String
+  vaccineTypeId String?
+  name          String
+  validUntil    DateTime @db.Date
+  createdAt     DateTime @default(now())
+
+  animal      Animal       @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  vaccineType VaccineType? @relation(fields: [vaccineTypeId], references: [id], onDelete: SetNull)
 
   @@index([animalId])
+  @@index([vaccineTypeId])
 }

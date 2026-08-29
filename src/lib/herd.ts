@@ -26,6 +26,51 @@ export function isVaccineValid(validUntil: Date | string) {
   return toDateKey(validUntil) >= jerusalemTodayKey();
 }
 
+export function formatIsraelDate(value: Date | string) {
+  const key = toDateKey(value);
+  const [year, month, day] = key.split("-");
+  return `${Number(day)}.${Number(month)}.${year}`;
+}
+
+export type VaccineStatus = "valid" | "expired" | "none";
+
+export function summarizeVaccineDates(dates: Array<Date | string>): {
+  status: VaccineStatus;
+  date: string | null;
+} {
+  if (!dates.length) return { status: "none", date: null };
+  const rows = dates.map((value) => ({
+    key: toDateKey(value),
+    valid: isVaccineValid(value),
+  }));
+  const expired = rows.filter((row) => !row.valid);
+  if (expired.length) {
+    return {
+      status: "expired",
+      date: expired.reduce(
+        (earliest, row) => (row.key < earliest ? row.key : earliest),
+        expired[0].key,
+      ),
+    };
+  }
+  return {
+    status: "valid",
+    date: rows.reduce(
+      (earliest, row) => (row.key < earliest ? row.key : earliest),
+      rows[0].key,
+    ),
+  };
+}
+
+export function latestVaccination<T extends { validUntil: Date | string }>(
+  records: T[],
+) {
+  if (!records.length) return null;
+  return records.reduce((best, current) =>
+    toDateKey(current.validUntil) > toDateKey(best.validUntil) ? current : best,
+  );
+}
+
 export function ageParts(birthDate: Date | string) {
   const birth = toDateKey(birthDate);
   const today = jerusalemTodayKey();
