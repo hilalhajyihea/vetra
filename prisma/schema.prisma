@@ -43,7 +43,56 @@ model Breeder {
   updatedAt       DateTime  @updatedAt
 
   veterinarian Veterinarian @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
+  groups       AnimalGroup[]
+  animals      Animal[]
 
   @@unique([veterinarianId, phone])
   @@index([veterinarianId, status])
+}
+
+model AnimalGroup {
+  id        String   @id @default(cuid())
+  breederId String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  breeder Breeder  @relation(fields: [breederId], references: [id], onDelete: Cascade)
+  animals Animal[]
+
+  @@index([breederId])
+}
+
+model Animal {
+  id        String   @id @default(cuid())
+  breederId String
+  groupId   String
+  /// Unique tag / number within this farm
+  number    String
+  /// MALE | FEMALE
+  sex       String
+  birthDate DateTime @db.Date
+  pregnant  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  breeder      Breeder             @relation(fields: [breederId], references: [id], onDelete: Cascade)
+  group        AnimalGroup         @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  vaccinations AnimalVaccination[]
+
+  @@unique([breederId, number])
+  @@index([breederId])
+  @@index([groupId])
+}
+
+model AnimalVaccination {
+  id         String   @id @default(cuid())
+  animalId   String
+  name       String
+  validUntil DateTime @db.Date
+  createdAt  DateTime @default(now())
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@index([animalId])
 }
