@@ -1,0 +1,165 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0c1a16;
+  --foreground: #f4efe6;
+  --ink: #14221e;
+  --muted: #8aa396;
+  --line: rgba(244, 239, 230, 0.14);
+  --surface: rgba(18, 42, 36, 0.78);
+  --sage: #7c9a82;
+  --teal: #2f6f5e;
+  --teal-deep: #1f4e45;
+  --hay: #c4a35a;
+  --hay-deep: #9a7a38;
+  --cream: #f4efe6;
+  --charcoal: #0c1a16;
+  --shadow: 0 28px 70px rgba(0, 0, 0, 0.42);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-rubik);
+  --font-display: var(--font-frank);
+}
+
+body {
+  background: #08110e;
+  color: rgba(244, 239, 230, 0.94);
+  font-family: var(--font-rubik), "Segoe UI", Tahoma, sans-serif;
+  min-height: 100vh;
+}
+
+.font-display {
+  font-family: var(--font-frank), Georgia, serif;
+}
+
+:lang(ar) .font-display {
+  font-family: var(--font-rubik), "Segoe UI", Tahoma, sans-serif;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-deep) 100%);
+  color: #f4efe6;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(47, 111, 94, 0.38);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  transform: none;
+  filter: none;
+  box-shadow: none;
+}
+
+.shop-shell {
+  position: relative;
+  isolation: isolate;
+  min-height: 100%;
+  background-color: #08110e;
+}
+
+.shop-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8, 17, 14, 0.18) 0%,
+      rgba(8, 17, 14, 0.32) 22%,
+      rgba(8, 17, 14, 0.62) 58%,
+      rgba(8, 17, 14, 0.86) 100%
+    ),
+    url("/images/vetra-flock-bg.png") center 32% / cover no-repeat;
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .shop-shell::before {
+    background-attachment: fixed, fixed;
+  }
+}
+
+.shop-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  opacity: 0.1;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+.shop-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.surface-dark {
+  background: rgba(16, 36, 31, 0.58);
+  border: 1px solid rgba(244, 239, 230, 0.14);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+  color: rgba(244, 239, 230, 0.94);
+}
+
+.shop-field {
+  border: 1px solid rgba(244, 239, 230, 0.16);
+  background: rgba(8, 17, 14, 0.55);
+  color: var(--cream);
+  color-scheme: dark;
+}
+
+.shop-field:focus {
+  border-color: var(--hay);
+  outline: none;
+}
+
+.shop-chip {
+  border: 1px solid rgba(244, 239, 230, 0.16);
+  background: rgba(8, 17, 14, 0.45);
+  color: rgba(244, 239, 230, 0.9);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.shop-chip:hover {
+  border-color: rgba(196, 163, 90, 0.7);
+}
+
+.vetra-rule {
+  height: 3px;
+  width: 5.5rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--hay), var(--teal));
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up {
+    animation: none;
+  }
+}

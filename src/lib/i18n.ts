@@ -1,0 +1,307 @@
+export type Locale = "he" | "ar";
+
+export function normalizeLocale(value: string | null | undefined): Locale {
+  return value === "ar" ? "ar" : "he";
+}
+
+type Vars = Record<string, string | number>;
+
+const he = {
+  brand: "Vetra",
+  brandHe: "וטרה",
+  langHe: "עברית",
+  langAr: "العربية",
+  switchLang: "العربية",
+  admin: "הנהלה",
+  navPricing: "חבילות",
+  navContact: "צור קשר",
+
+  heroEyebrow: "לווטרינרים ולמגדלים",
+  heroTitle: "ניהול הגידולים והחיסונים — במקום אחד",
+  heroLead:
+    "Vetra מקלה על הווטרינר לעקוב אחרי המגדלים והחיסונים, ועל המגדל לעקוב אחרי החיסונים וההמלטות של העדר. כבשים, בקר, עופות ועוד.",
+  heroCtaPricing: "מה כלול",
+  heroCtaWhatsapp: "וואטסאפ להצטרפות",
+
+  audiencesTitle: "שני צדדים. מערכת אחת.",
+  vetCardTitle: "לווטרינר",
+  vetCardText:
+    "כל מגדל במקום אחד. מעקב חיסונים לכל העדר, הודעות חשובות, ותמונה ברורה של מה שקורה אצל הלקוחות שלכם.",
+  breederCardTitle: "למגדל",
+  breederCardText:
+    "המגדל נכנס לאתר של הווטרינר שלו, מוסיף קבוצות חיות, עוקב אחרי המלטות ורואה מתי מגיע החיסון הבא.",
+
+  howTitle: "איך זה עובד",
+  how1Title: "מצטרפים",
+  how1Text: "כותבים בוואטסאפ. אנחנו פותחים לקליניקה כתובת ייחודית.",
+  how2Title: "מזמינים מגדלים",
+  how2Text: "מצרפים את המגדלים של הקליניקה לפי החבילה שבחרתם.",
+  how3Title: "עוקבים יחד",
+  how3Text: "חיסונים, המלטות ותזכורות וואטסאפ — לווטרינר ולמגדל.",
+
+  pricingTitle: "החבילות",
+  pricingLead: "שלוש חבילות לפי מספר המגדלים. לפרטים ולהצטרפות — וואטסאפ.",
+  planName: "Vetra",
+  planFrom: "החל מ־",
+  planPeriod: "/ לחודש",
+  planLead: "כל הכלים לווטרינר ולמגדל — ההבדל הוא מספר המגדלים.",
+  plan5Name: "עד 5 מגדלים",
+  plan20Name: "עד 20 מגדלים",
+  planUnlimitedName: "מגדלים ללא הגבלה",
+  plan5Limit: "עד 5 מגדלים בקליניקה",
+  plan20Limit: "עד 20 מגדלים בקליניקה",
+  planUnlimitedLimit: "צירוף לא מוגבל של מגדלים",
+  planFeature1: "צירוף מגדלים לפי החבילה",
+  planFeature2: "מעקב חיסונים על ידי הווטרינר",
+  planFeature3: "המגדל מוסיף קבוצות חיות ועוקב אחריהן",
+  planFeature4: "מעקב המלטות",
+  planFeature5: "תזכורות וואטסאפ לחיסונים ולהודעות חשובות",
+  planFeature6: "כתובת ייחודית לקליניקה ודף ניהול נפרד",
+  planCta: "צור קשר בוואטסאפ",
+  planWa5: "שלום, מעוניין בחבילת Vetra עד 5 מגדלים",
+  planWa20: "שלום, מעוניין בחבילת Vetra עד 20 מגדלים",
+  planWaUnlimited: "שלום, מעוניין בחבילת Vetra עם מגדלים ללא הגבלה",
+  customName: "קליניקה מותאמת",
+  customPrice: "דברו איתנו",
+  customLead: "כמה וטרינרים, נפח גדול או ליווי בהקמה — נתאים הצעה.",
+  customCta: "לקבלת הצעת מחיר",
+
+  contactTitle: "צור קשר",
+  contactLead: "רוצים Vetra לקליניקה? וואטסאפ או מייל — נחזור במהירות.",
+  footerLine: "Vetra · ניהול גידולים וחיסונים",
+
+  loginTitle: "כניסת וטרינר",
+  loginSubtitle: "ניהול הקליניקה של {name}",
+  platformLoginTitle: "מנהל מערכת",
+  platformLoginSubtitle: "ניהול וטרינרים בפלטפורמת Vetra",
+  username: "שם משתמש",
+  password: "סיסמה",
+  loginCta: "התחברות",
+  loggingIn: "מתחבר...",
+  loginFailed: "ההתחברות נכשלה",
+  logout: "יציאה",
+  networkError: "שגיאת רשת",
+
+  comingEyebrow: "קליניקה ב־Vetra",
+  comingTitle: "האתר של הקליניקה בפיתוח",
+  comingLead:
+    "בקרוב יופיעו כאן המגדלים, החיסונים וההמלטות. הווטרינר כבר יכול להיכנס לדף הניהול.",
+  comingLogin: "כניסת וטרינר",
+  comingHome: "חזרה ל־Vetra",
+
+  vetAdminEyebrow: "Vetra · ניהול קליניקה",
+  vetAdminTitle: "שלום, {name}",
+  vetAdminLead:
+    "פאנל הניהול בפיתוח. בקרוב תוכלו לנהל מגדלים, חיסונים והמלטות מכאן.",
+  vetAdminPublic: "לדף הקליניקה",
+  comingFeature1: "רשימת מגדלים ללא הגבלה",
+  comingFeature2: "מעקב חיסונים",
+  comingFeature3: "קבוצות חיות והמלטות",
+  comingFeature4: "הודעות וואטסאפ",
+
+  platformTitle: "ניהול המערכת",
+  platformLead: "הוסיפו וטרינרים. כל קליניקה מקבלת כתובת באותו דומיין.",
+  newVet: "וטרינר חדש",
+  fieldSlug: "כתובת (clinic-name)",
+  fieldDisplayName: "שם לתצוגה",
+  fieldClinic: "שם הקליניקה (אופציונלי)",
+  fieldUsername: "שם משתמש לכניסה",
+  fieldPassword: "סיסמה",
+  fieldPhone: "טלפון (אופציונלי)",
+  fieldLocale: "שפת הקליניקה",
+  fieldPlan: "חבילה",
+  planBase: "בסיס",
+  planCustom: "מותאם",
+  addVet: "הוספת וטרינר",
+  createdVet: "הווטרינר נוצר — כתובת: /{slug}",
+  createFailed: "יצירה נכשלה",
+  loadError: "שגיאה בטעינה",
+  loading: "טוען...",
+  active: "פעיל",
+  inactive: "מושבת",
+  toggleOff: "השבתה",
+  toggleOn: "הפעלה",
+  resetPassword: "סיסמה חדשה",
+  deleteVet: "מחיקה",
+  vetDisabled: "הווטרינר הושבת",
+  vetEnabled: "הווטרינר הופעל",
+  passwordUpdated: "הסיסמה עודכנה",
+  passwordMin: "הסיסמה חייבת להיות לפחות 6 תווים",
+  vetDeleted: "הווטרינר נמחק: {name}",
+  confirmDelete: "למחוק את \"{name}\" לצמיתות?",
+  confirmDeleteType: "כתבו את שם הווטרינר לאישור: {name}",
+  deleteMismatch: "המחיקה בוטלה — השם לא תואם",
+  updateFailed: "עדכון נכשל",
+  localeSaved: "השפה עודכנה",
+  planSaved: "החבילה עודכנה",
+  slugTaken: "שם משתמש או כתובת כבר קיימים",
+  slugInvalid: "כתובת לא תקינה (למשל: clinic או cohen-vet)",
+  notConnected: "לא מחובר",
+  invalidData: "נתונים לא תקינים",
+
+  notFoundTitle: "העמוד לא נמצא",
+  notFoundLead: "ייתכן שהכתובת שגויה או שהקליניקה אינה פעילה.",
+  backHome: "חזרה ל־Vetra",
+
+  errInvalidData: "נתונים לא תקינים",
+  errBadCredentials: "שם משתמש או סיסמה שגויים",
+  errServer: "שגיאת שרת",
+} as const;
+
+const ar: { [K in keyof typeof he]: string } = {
+  brand: "Vetra",
+  brandHe: "فيترا",
+  langHe: "עברית",
+  langAr: "العربية",
+  switchLang: "עברית",
+  admin: "الإدارة",
+  navPricing: "الباقات",
+  navContact: "تواصل معنا",
+
+  heroEyebrow: "للأطباء البيطريين وللمربّين",
+  heroTitle: "إدارة القطعان والتطعيمات — في مكان واحد",
+  heroLead:
+    "Vetra تسهّل على الطبيب البيطري متابعة المربّين والتطعيمات، وعلى المربّي متابعة تطعيمات القطيع والولادات. أغنام، أبقار، دواجن والمزيد.",
+  heroCtaPricing: "ماذا يشمل",
+  heroCtaWhatsapp: "واتساب للانضمام",
+
+  audiencesTitle: "طرفان. منظومة واحدة.",
+  vetCardTitle: "للطبيب البيطري",
+  vetCardText:
+    "كل مربّي في مكان واحد. متابعة التطعيمات لكل قطيع، رسائل مهمّة، وصورة واضحة عمّا يجري لدى زبائنكم.",
+  breederCardTitle: "للمربّي",
+  breederCardText:
+    "يدخل المربّي إلى موقع طبيبه البيطري، يضيف مجموعات حيوانات، يتابع الولادات ويرى موعد التطعيم القادم.",
+
+  howTitle: "كيف يعمل",
+  how1Title: "تنضمون",
+  how1Text: "تراسلون عبر واتساب. نفتح للعيادة عنوانًا خاصًا.",
+  how2Title: "تضيفون مربّين",
+  how2Text: "تضيفون مربّي العيادة حسب الباقة التي اخترتموها.",
+  how3Title: "تتابعون معًا",
+  how3Text: "تطعيمات، ولادات وتذكيرات واتساب — للطبيب وللمربّي.",
+
+  pricingTitle: "الباقات",
+  pricingLead: "ثلاث باقات حسب عدد المربّين. للتفاصيل والانضمام — واتساب.",
+  planName: "Vetra",
+  planFrom: "ابتداءً من ",
+  planPeriod: "/ شهريًا",
+  planLead: "كل الأدوات للطبيب وللمربّي — الفرق هو عدد المربّين.",
+  plan5Name: "حتى 5 مربّين",
+  plan20Name: "حتى 20 مربّيًا",
+  planUnlimitedName: "مربّون بلا حد",
+  plan5Limit: "حتى 5 مربّين في العيادة",
+  plan20Limit: "حتى 20 مربّيًا في العيادة",
+  planUnlimitedLimit: "إضافة غير محدودة للمربّين",
+  planFeature1: "إضافة مربّين حسب الباقة",
+  planFeature2: "متابعة التطعيمات من الطبيب البيطري",
+  planFeature3: "المربّي يضيف مجموعات حيوانات ويتابعها",
+  planFeature4: "متابعة الولادات",
+  planFeature5: "تذكيرات واتساب للتطعيمات وللرسائل المهمّة",
+  planFeature6: "عنوان خاص للعيادة ولوحة إدارة منفصلة",
+  planCta: "تواصلوا عبر واتساب",
+  planWa5: "مرحباً، أرغب باقة Vetra حتى 5 مربّين",
+  planWa20: "مرحباً، أرغب باقة Vetra حتى 20 مربّيًا",
+  planWaUnlimited: "مرحباً، أرغب باقة Vetra بلا حد لعدد المربّين",
+  customName: "عيادة مخصّصة",
+  customPrice: "تواصلوا معنا",
+  customLead: "أكثر من طبيب، حجم كبير أو مرافقة في الإعداد — نقدّم عرضًا مناسبًا.",
+  customCta: "احصلوا على عرض سعر",
+
+  contactTitle: "تواصل معنا",
+  contactLead: "بدكم Vetra لعيادتكم؟ واتساب أو بريد — نرد بسرعة.",
+  footerLine: "Vetra · إدارة القطعان والتطعيمات",
+
+  loginTitle: "دخول الطبيب البيطري",
+  loginSubtitle: "إدارة عيادة {name}",
+  platformLoginTitle: "مدير النظام",
+  platformLoginSubtitle: "إدارة الأطباء البيطريين في منصّة Vetra",
+  username: "اسم المستخدم",
+  password: "كلمة المرور",
+  loginCta: "تسجيل الدخول",
+  loggingIn: "جاري الدخول...",
+  loginFailed: "فشل تسجيل الدخول",
+  logout: "خروج",
+  networkError: "خطأ في الشبكة",
+
+  comingEyebrow: "عيادة على Vetra",
+  comingTitle: "موقع العيادة قيد التطوير",
+  comingLead:
+    "قريبًا ستظهر هنا قوائم المربّين والتطعيمات والولادات. يمكن للطبيب الدخول إلى لوحة الإدارة الآن.",
+  comingLogin: "دخول الطبيب البيطري",
+  comingHome: "العودة إلى Vetra",
+
+  vetAdminEyebrow: "Vetra · إدارة العيادة",
+  vetAdminTitle: "مرحبًا، {name}",
+  vetAdminLead:
+    "لوحة الإدارة قيد التطوير. قريبًا ستُدير المربّين والتطعيمات والولادات من هنا.",
+  vetAdminPublic: "إلى صفحة العيادة",
+  comingFeature1: "قائمة مربّين بلا حد",
+  comingFeature2: "متابعة التطعيمات",
+  comingFeature3: "مجموعات حيوانات وولادات",
+  comingFeature4: "رسائل واتساب",
+
+  platformTitle: "إدارة النظام",
+  platformLead: "أضيفوا أطباء بيطريين. كل عيادة تحصل على عنوان على نفس النطاق.",
+  newVet: "طبيب بيطري جديد",
+  fieldSlug: "العنوان (clinic-name)",
+  fieldDisplayName: "اسم العرض",
+  fieldClinic: "اسم العيادة (اختياري)",
+  fieldUsername: "اسم المستخدم للدخول",
+  fieldPassword: "كلمة المرور",
+  fieldPhone: "الهاتف (اختياري)",
+  fieldLocale: "لغة العيادة",
+  fieldPlan: "الباقة",
+  planBase: "أساسية",
+  planCustom: "مخصّصة",
+  addVet: "إضافة طبيب",
+  createdVet: "تم إنشاء الطبيب — العنوان: /{slug}",
+  createFailed: "فشل الإنشاء",
+  loadError: "خطأ في التحميل",
+  loading: "جاري التحميل...",
+  active: "نشط",
+  inactive: "متوقف",
+  toggleOff: "إيقاف",
+  toggleOn: "تفعيل",
+  resetPassword: "كلمة مرور جديدة",
+  deleteVet: "حذف",
+  vetDisabled: "تم إيقاف الطبيب",
+  vetEnabled: "تم تفعيل الطبيب",
+  passwordUpdated: "تم تحديث كلمة المرور",
+  passwordMin: "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
+  vetDeleted: "حُذف الطبيب: {name}",
+  confirmDelete: "حذف \"{name}\" نهائيًا؟",
+  confirmDeleteType: "اكتبوا اسم الطبيب للتأكيد: {name}",
+  deleteMismatch: "لم يُحذف — الاسم غير مطابق",
+  updateFailed: "فشل التحديث",
+  localeSaved: "تم تحديث اللغة",
+  planSaved: "تم تحديث الباقة",
+  slugTaken: "اسم المستخدم أو العنوان موجود مسبقًا",
+  slugInvalid: "عنوان غير صالح (مثل: clinic أو cohen-vet)",
+  notConnected: "غير متصل",
+  invalidData: "بيانات غير صالحة",
+
+  notFoundTitle: "الصفحة غير موجودة",
+  notFoundLead: "ربما العنوان خاطئ أو العيادة غير نشطة.",
+  backHome: "العودة إلى Vetra",
+
+  errInvalidData: "بيانات غير صالحة",
+  errBadCredentials: "اسم المستخدم أو كلمة المرور غير صحيحة",
+  errServer: "خطأ في الخادم",
+};
+
+const dict = { he, ar } as const;
+
+export type MsgKey = keyof typeof he;
+
+export function t(locale: Locale, key: MsgKey, vars?: Vars): string {
+  let text: string = dict[locale][key] ?? dict.he[key] ?? key;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      text = text.replaceAll(`{${k}}`, String(v));
+    }
+  }
+  return text;
+}
+
+export const LOCALE_STORAGE_KEY = "vetra_locale";

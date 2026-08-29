@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Veterinarian {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  displayName  String
+  clinicName   String?
+  username     String   @unique
+  passwordHash String
+  isActive     Boolean  @default(true)
+  /// Public + vet UI language: he | ar
+  locale       String   @default("he")
+  phone        String?
+  /// BASE | CUSTOM
+  plan         String   @default("BASE")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
