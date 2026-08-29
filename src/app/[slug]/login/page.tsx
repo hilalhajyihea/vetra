@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LoginForm } from "@/components/LoginForm";
 import { getSession } from "@/lib/auth";
@@ -34,7 +35,7 @@ export default async function VetLoginPage({ params }: Props) {
 
   return (
     <main
-      className="shop-shell flex flex-1 items-center justify-center px-4 py-12"
+      className="shop-shell flex flex-1 flex-col items-center justify-center gap-4 px-4 py-12"
       lang={locale}
     >
       <LoginForm
@@ -44,6 +45,12 @@ export default async function VetLoginPage({ params }: Props) {
         redirectTo={`/${slug}/admin`}
         locale={locale}
       />
+      <Link
+        href={`/${slug}`}
+        className="rounded-xl border border-white/20 px-4 py-2 text-sm text-[var(--cream)] transition hover:bg-white/10"
+      >
+        {t(locale, "backToVetHome")}
+      </Link>
     </main>
   );
 }

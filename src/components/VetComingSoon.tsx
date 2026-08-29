@@ -49,10 +49,10 @@ export function VetComingSoon({
             {t(locale, "comingLogin")}
           </Link>
           <Link
-            href="/"
+            href={`/${slug}`}
             className="rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold"
           >
-            {t(locale, "comingHome")}
+            {t(locale, "backToVetHome")}
           </Link>
         </div>
       </div>

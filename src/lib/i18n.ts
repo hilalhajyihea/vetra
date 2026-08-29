@@ -87,7 +87,11 @@ const he = {
   comingLead:
     "בקרוב יופיעו כאן המגדלים, החיסונים וההמלטות. הווטרינר כבר יכול להיכנס לדף הניהול.",
   comingLogin: "כניסת וטרינר",
-  comingHome: "חזרה ל־Vetra",
+  comingHome: "חזרה לדף הראשי",
+  backToVetHome: "חזרה לדף הראשי",
+  errorTitle: "משהו השתבש",
+  errorLead: "אפשר לנסות שוב או לחזור לדף הראשי של הקליניקה.",
+  tryAgain: "ניסיון נוסף",
 
   vetAdminEyebrow: "Vetra · ניהול קליניקה",
   vetAdminTitle: "שלום, {name}",
@@ -326,7 +330,11 @@ const ar: { [K in keyof typeof he]: string } = {
   comingLead:
     "قريبًا ستظهر هنا قوائم المربّين والتطعيمات والولادات. يمكن للطبيب الدخول إلى لوحة الإدارة الآن.",
   comingLogin: "دخول الطبيب البيطري",
-  comingHome: "العودة إلى Vetra",
+  comingHome: "العودة إلى الصفحة الرئيسية",
+  backToVetHome: "العودة إلى الصفحة الرئيسية",
+  errorTitle: "حدث خطأ",
+  errorLead: "يمكن المحاولة مرة أخرى أو العودة إلى الصفحة الرئيسية للعيادة.",
+  tryAgain: "محاولة أخرى",
 
   vetAdminEyebrow: "Vetra · إدارة العيادة",
   vetAdminTitle: "مرحبًا، {name}",
