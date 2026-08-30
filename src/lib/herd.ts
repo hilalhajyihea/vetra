@@ -26,6 +26,16 @@ export function isVaccineValid(validUntil: Date | string) {
   return toDateKey(validUntil) >= jerusalemTodayKey();
 }
 
+export function dateInputValue(value: Date | string | null | undefined) {
+  if (!value) return "";
+  return toDateKey(value);
+}
+
+export function parseOptionalDate(value: string | null | undefined) {
+  if (!value) return null;
+  return new Date(`${toDateKey(value)}T00:00:00.000Z`);
+}
+
 export function formatIsraelDate(value: Date | string) {
   const key = toDateKey(value);
   const [year, month, day] = key.split("-");

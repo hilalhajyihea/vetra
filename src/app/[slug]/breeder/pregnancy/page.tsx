@@ -1,18 +1,22 @@
-import { ComingSoonSection } from "@/components/ComingSoonSection";
-import { normalizeLocale } from "@/lib/i18n";
+import type { Metadata } from "next";
+import { PregnancyBoard } from "@/components/PregnancyBoard";
+import { normalizeLocale, t } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export default async function Page({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const vet = await prisma.veterinarian.findUnique({ where: { slug } });
-  return (
-    <ComingSoonSection
-      locale={normalizeLocale(vet?.locale)}
-      titleKey="navPregnancy"
-    />
-  );
+  const locale = normalizeLocale(vet?.locale);
+  return { title: `${t(locale, "brand")} · ${t(locale, "pregnancyTitle")}` };
+}
+
+export default async function PregnancyPage({ params }: Props) {
+  const { slug } = await params;
+  const vet = await prisma.veterinarian.findUnique({ where: { slug } });
+  const locale = normalizeLocale(vet?.locale);
+  return <PregnancyBoard slug={slug} locale={locale} />;
 }

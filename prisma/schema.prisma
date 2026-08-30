@@ -74,6 +74,12 @@ model Animal {
   sex       String
   birthDate DateTime @db.Date
   pregnant  Boolean  @default(false)
+  matingDate     DateTime? @db.Date
+  lambingDate    DateTime? @db.Date
+  checkup1Date   DateTime? @db.Date
+  checkup2Date   DateTime? @db.Date
+  /// SPONGE | AI
+  breedingMethod String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

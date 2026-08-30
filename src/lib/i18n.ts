@@ -247,6 +247,18 @@ const he = {
   needClinicVaccine: "קודם יש להוסיף חיסונים מהלוח של הווטרינר",
   deleteAnimal: "מחיקת חיה",
   confirmDeleteAnimal: "למחוק את מספר {number} מהקבוצה?",
+  pregnancyTitle: "הריון והמלטה",
+  matingDate: "תאריך זיווג",
+  lambingDate: "תאריך המלטה",
+  checkup1Date: "תאריך בדיקה ראשונה",
+  checkup2Date: "תאריך בדיקה שנייה",
+  breedingMethod: "שיטת הזיווג",
+  breedingNone: "לא נבחר",
+  breedingSponge: "ספוג הורמון",
+  breedingAi: "הזרעה",
+  noFemalesInGroup: "אין נקבות בקבוצה",
+  noPregnancyAnimals: "אין עדיין נקבות בעדר",
+  saveGroupPregnancy: "שמירה לכל הקבוצה",
 } as const;
 
 const ar: { [K in keyof typeof he]: string } = {
@@ -490,6 +502,18 @@ const ar: { [K in keyof typeof he]: string } = {
   needClinicVaccine: "يجب إضافة التطعيمات أولًا من لوحة الطبيب البيطري",
   deleteAnimal: "حذف الحيوان",
   confirmDeleteAnimal: "حذف الرقم {number} من المجموعة؟",
+  pregnancyTitle: "الحمل والولادة",
+  matingDate: "تاريخ التزاوج",
+  lambingDate: "تاريخ الولادة",
+  checkup1Date: "تاريخ الفحص الأول",
+  checkup2Date: "تاريخ الفحص الثاني",
+  breedingMethod: "طريقة التزاوج",
+  breedingNone: "غير محدد",
+  breedingSponge: "إسفنجة هرمونية",
+  breedingAi: "تلقيح اصطناعي",
+  noFemalesInGroup: "لا إناث في المجموعة",
+  noPregnancyAnimals: "لا إناث في القطيع بعد",
+  saveGroupPregnancy: "حفظ للمجموعة كلها",
 };
 
 const dict = { he, ar } as const;
