@@ -50,3 +50,29 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ group });
 }
+
+export async function DELETE(request: Request) {
+  const auth = await requireFarmAccess(farmIdFromRequest(request));
+  if (!auth) {
+    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+  }
+
+  const id = new URL(request.url).searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "נתונים לא תקינים" }, { status: 400 });
+  }
+
+  const group = await prisma.animalGroup.findFirst({
+    where: { id, breederId: auth.breeder.id },
+    include: { _count: { select: { animals: true } } },
+  });
+  if (!group) {
+    return NextResponse.json({ error: "קבוצה לא נמצאה" }, { status: 404 });
+  }
+  if (group._count.animals > 0) {
+    return NextResponse.json({ error: "GROUP_NOT_EMPTY" }, { status: 409 });
+  }
+
+  await prisma.animalGroup.delete({ where: { id: group.id } });
+  return NextResponse.json({ ok: true });
+}

@@ -183,6 +183,31 @@ export function HerdManager({ locale, farmId }: Props) {
     load();
   }
 
+  async function deleteGroup(group: Group) {
+    if (group.animals.length > 0) {
+      setError(t(locale, "errGroupNotEmpty"));
+      return;
+    }
+    if (!window.confirm(t(locale, "confirmDeleteGroup", { name: group.name }))) {
+      return;
+    }
+    setError("");
+    const params = new URLSearchParams({ id: group.id });
+    if (farmId) params.set("farmId", farmId);
+    const res = await fetch(`/api/breeder/groups?${params}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(
+        data.error === "GROUP_NOT_EMPTY"
+          ? t(locale, "errGroupNotEmpty")
+          : t(locale, "updateFailed"),
+      );
+      return;
+    }
+    if (groupId === group.id) setGroupId("");
+    load();
+  }
+
   async function addVaccine(animalId: string, e: FormEvent) {
     e.preventDefault();
     const draft = vaccineDrafts[animalId];
@@ -325,13 +350,24 @@ export function HerdManager({ locale, farmId }: Props) {
 
         {filtered.map((group) => (
           <section key={group.id} className="surface-dark rounded-2xl p-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="font-display text-2xl text-[var(--cream)]">
-                {group.name}
-              </h2>
-              <p className="text-sm text-[rgba(244,239,230,0.55)]">
-                {t(locale, "groupCount", { count: group.animals.length })}
-              </p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="font-display text-2xl text-[var(--cream)]">
+                  {group.name}
+                </h2>
+                <p className="text-sm text-[rgba(244,239,230,0.55)]">
+                  {t(locale, "groupCount", { count: group.animals.length })}
+                </p>
+              </div>
+              {group.animals.length === 0 ? (
+                <button
+                  type="button"
+                  onClick={() => deleteGroup(group)}
+                  className="rounded-xl border border-red-400/30 px-3 py-1.5 text-sm text-red-200"
+                >
+                  {t(locale, "deleteGroup")}
+                </button>
+              ) : null}
             </div>
             {group.animals.length === 0 ? (
               <p className="mt-3 text-sm text-[rgba(244,239,230,0.62)]">
