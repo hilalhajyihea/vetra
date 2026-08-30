@@ -104,7 +104,7 @@ export function PregnancyBoard({ locale, farmId }: Props) {
   const filteredAnimals = useMemo(() => {
     const q = search.trim();
     if (!q) return animals;
-    return animals.filter((animal) => animal.number.includes(q));
+    return animals.filter((animal) => animal.number.trim() === q);
   }, [animals, search]);
 
   async function save(

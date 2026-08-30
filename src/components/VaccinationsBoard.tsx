@@ -92,7 +92,7 @@ export function VaccinationsBoard({ locale, farmId }: Props) {
     if (!selected) return [];
     const q = search.trim();
     const rows = q
-      ? selected.animals.filter((animal) => animal.number.includes(q))
+      ? selected.animals.filter((animal) => animal.number.trim() === q)
       : selected.animals;
     return [...rows].sort((a, b) =>
       a.number.localeCompare(b.number, undefined, { numeric: true }),
