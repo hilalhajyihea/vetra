@@ -318,7 +318,7 @@ export function HerdManager({ locale, farmId }: Props) {
                     checked={pregnant}
                     onChange={(e) => setPregnant(e.target.checked)}
                   />
-                  {t(locale, "pregnantYes")}
+                  {t(locale, "pregnant")}
                 </label>
               ) : null}
               <button type="submit" className="btn-primary rounded-xl px-4 py-2 text-sm font-semibold">
@@ -401,9 +401,7 @@ export function HerdManager({ locale, farmId }: Props) {
                                 togglePregnant(animal, e.target.checked)
                               }
                             />
-                            {animal.pregnant
-                              ? t(locale, "pregnantYes")
-                              : t(locale, "pregnantNo")}
+                            {t(locale, "pregnant")}
                           </label>
                         ) : null}
                       </div>
