@@ -22,9 +22,12 @@ function serializeFemale(animal: {
     lambingDate: dateInputValue(animal.lambingDate),
     checkup1Date: dateInputValue(animal.checkup1Date),
     checkup2Date: dateInputValue(animal.checkup2Date),
-    breedingMethod: animal.breedingMethod === "SPONGE" || animal.breedingMethod === "AI"
-      ? animal.breedingMethod
-      : "",
+    breedingMethod:
+      animal.breedingMethod === "NATURAL" ||
+      animal.breedingMethod === "SPONGE" ||
+      animal.breedingMethod === "AI"
+        ? animal.breedingMethod
+        : "",
   };
 }
 
@@ -75,7 +78,7 @@ const patchSchema = z.object({
   lambingDate: z.string().optional(),
   checkup1Date: z.string().optional(),
   checkup2Date: z.string().optional(),
-  breedingMethod: z.enum(["SPONGE", "AI", ""]).optional(),
+  breedingMethod: z.enum(["NATURAL", "SPONGE", "AI", ""]).optional(),
 });
 
 function pregnancyData(input: z.infer<typeof patchSchema>, includeMethod: boolean) {

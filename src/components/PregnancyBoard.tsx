@@ -4,7 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { t, type Locale } from "@/lib/i18n";
 
-type BreedingMethod = "" | "SPONGE" | "AI";
+type BreedingMethod = "" | "NATURAL" | "SPONGE" | "AI";
 
 type FemaleRow = {
   id: string;
@@ -339,6 +339,7 @@ function PregnancyFields({
             }
           >
             <option value="">{t(locale, "breedingNone")}</option>
+            <option value="NATURAL">{t(locale, "breedingNatural")}</option>
             <option value="SPONGE">{t(locale, "breedingSponge")}</option>
             <option value="AI">{t(locale, "breedingAi")}</option>
           </select>
