@@ -94,7 +94,7 @@ export function HerdManager({ locale, farmId }: Props) {
     return groups
       .map((g) => ({
         ...g,
-        animals: g.animals.filter((a) => a.number.includes(q)),
+        animals: g.animals.filter((a) => a.number.trim() === q),
       }))
       .filter((g) => g.animals.length > 0);
   }, [groups, search]);
