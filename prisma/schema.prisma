@@ -23,8 +23,10 @@ model Veterinarian {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  breeders    Breeder[]
-  vaccineTypes VaccineType[]
+  breeders       Breeder[]
+  vaccineTypes   VaccineType[]
+  bookingWindows BookingWindow[]
+  appointments   Appointment[]
 }
 
 model Breeder {
@@ -46,6 +48,7 @@ model Breeder {
   veterinarian Veterinarian @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
   groups       AnimalGroup[]
   animals      Animal[]
+  appointments Appointment[]
 
   @@unique([veterinarianId, phone])
   @@index([veterinarianId, status])
@@ -97,6 +100,8 @@ model VaccineType {
   veterinarianId String
   name           String
   description    String   @default("")
+  /// How many months the vaccine stays valid after it is given
+  validMonths    Int      @default(12)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -112,6 +117,9 @@ model AnimalVaccination {
   animalId      String
   vaccineTypeId String?
   name          String
+  /// Date the vaccine was given
+  givenAt       DateTime? @db.Date
+  /// Computed from givenAt + vaccine type months
   validUntil    DateTime @db.Date
   createdAt     DateTime @default(now())
 
@@ -120,4 +128,36 @@ model AnimalVaccination {
 
   @@index([animalId])
   @@index([vaccineTypeId])
+}
+
+model BookingWindow {
+  id             String   @id @default(cuid())
+  veterinarianId String
+  date           DateTime @db.Date
+  /// Minutes from 00:00 Israel time, inclusive
+  startMin       Int
+  /// Minutes from 00:00 Israel time, exclusive
+  endMin         Int
+  createdAt      DateTime @default(now())
+
+  veterinarian Veterinarian @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
+
+  @@index([veterinarianId, date])
+}
+
+model Appointment {
+  id             String   @id @default(cuid())
+  veterinarianId String
+  breederId      String
+  date           DateTime @db.Date
+  startMin       Int
+  reason         String
+  createdAt      DateTime @default(now())
+
+  veterinarian Veterinarian @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
+  breeder      Breeder      @relation(fields: [breederId], references: [id], onDelete: Cascade)
+
+  @@unique([veterinarianId, date, startMin])
+  @@index([breederId])
+  @@index([veterinarianId, date])
 }

@@ -7,6 +7,7 @@ type Vaccine = {
   id: string;
   name: string;
   description: string;
+  validMonths: number;
 };
 
 export function VaccineCatalogEditor({ locale }: { locale: Locale }) {
@@ -15,9 +16,11 @@ export function VaccineCatalogEditor({ locale }: { locale: Locale }) {
   const [error, setError] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [validMonths, setValidMonths] = useState(12);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editMonths, setEditMonths] = useState(12);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -42,7 +45,7 @@ export function VaccineCatalogEditor({ locale }: { locale: Locale }) {
     const res = await fetch("/api/vet/vaccines", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, description }),
+      body: JSON.stringify({ name, description, validMonths }),
     });
     if (res.status === 409) {
       setError(t(locale, "errVaccineTaken"));
@@ -54,6 +57,7 @@ export function VaccineCatalogEditor({ locale }: { locale: Locale }) {
     }
     setName("");
     setDescription("");
+    setValidMonths(12);
     load();
   }
 
@@ -66,6 +70,7 @@ export function VaccineCatalogEditor({ locale }: { locale: Locale }) {
         id,
         name: editName,
         description: editDescription,
+        validMonths: editMonths,
       }),
     });
     if (res.status === 409) {
@@ -121,6 +126,18 @@ export function VaccineCatalogEditor({ locale }: { locale: Locale }) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+        <label className="mt-2 block text-sm">
+          {t(locale, "vaccineValidMonths")}
+          <input
+            type="number"
+            min={1}
+            max={60}
+            className="shop-field mt-1 w-full rounded-xl px-3 py-2.5"
+            value={validMonths}
+            onChange={(e) => setValidMonths(Number(e.target.value) || 1)}
+            required
+          />
+        </label>
         <button
           type="submit"
           className="btn-primary mt-3 rounded-xl px-4 py-2 text-sm font-semibold"
@@ -150,6 +167,17 @@ export function VaccineCatalogEditor({ locale }: { locale: Locale }) {
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
                   />
+                  <label className="text-sm">
+                    {t(locale, "vaccineValidMonths")}
+                    <input
+                      type="number"
+                      min={1}
+                      max={60}
+                      className="shop-field mt-1 w-full rounded-xl px-3 py-2.5"
+                      value={editMonths}
+                      onChange={(e) => setEditMonths(Number(e.target.value) || 1)}
+                    />
+                  </label>
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
@@ -171,6 +199,10 @@ export function VaccineCatalogEditor({ locale }: { locale: Locale }) {
                 <>
                   <p className="font-semibold">{vaccine.name}</p>
                   <p className="mt-1 text-sm text-[rgba(244,239,230,0.62)]">
+                    {t(locale, "vaccineValidMonths")}: {vaccine.validMonths}{" "}
+                    {t(locale, "vaccineMonthsUnit")}
+                  </p>
+                  <p className="mt-1 text-sm text-[rgba(244,239,230,0.62)]">
                     {vaccine.description || t(locale, "noVaccineInfo")}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -181,6 +213,7 @@ export function VaccineCatalogEditor({ locale }: { locale: Locale }) {
                         setEditingId(vaccine.id);
                         setEditName(vaccine.name);
                         setEditDescription(vaccine.description);
+                        setEditMonths(vaccine.validMonths || 12);
                       }}
                     >
                       {t(locale, "editVaccine")}

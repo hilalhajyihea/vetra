@@ -36,6 +36,19 @@ export function parseOptionalDate(value: string | null | undefined) {
   return new Date(`${toDateKey(value)}T00:00:00.000Z`);
 }
 
+export function addMonthsToDateKey(dateKey: string, months: number) {
+  const [year, month, day] = toDateKey(dateKey).split("-").map(Number);
+  const targetMonthIndex = month - 1 + months;
+  const lastDay = new Date(Date.UTC(year, targetMonthIndex + 1, 0)).getUTCDate();
+  const safeDay = Math.min(day, lastDay);
+  const result = new Date(Date.UTC(year, targetMonthIndex, safeDay));
+  return result.toISOString().slice(0, 10);
+}
+
+export function validUntilFromGiven(givenAt: Date | string, months: number) {
+  return addMonthsToDateKey(toDateKey(givenAt), months);
+}
+
 export function formatIsraelDate(value: Date | string) {
   const key = toDateKey(value);
   const [year, month, day] = key.split("-");

@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { farmIdFromRequest, requireFarmAccess } from "@/lib/breederSession";
-import { toDateKey } from "@/lib/herd";
+import { toDateKey, validUntilFromGiven } from "@/lib/herd";
 import { prisma } from "@/lib/prisma";
 
 const createSchema = z.object({
   animalId: z.string().min(1),
   vaccineTypeId: z.string().min(1).optional(),
   name: z.string().min(1).max(80).optional(),
-  validUntil: z.string().min(8),
+  givenAt: z.string().min(8),
 });
 
 export async function POST(request: Request) {
@@ -49,7 +49,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "VACCINE_UNKNOWN" }, { status: 400 });
   }
 
-  const validUntil = toDateKey(parsed.data.validUntil);
+  const givenKey = toDateKey(parsed.data.givenAt);
+  const untilKey = validUntilFromGiven(givenKey, type.validMonths);
   const existing = await prisma.animalVaccination.findFirst({
     where: {
       animalId: animal.id,
@@ -61,7 +62,8 @@ export async function POST(request: Request) {
   const data = {
     vaccineTypeId: type.id,
     name: type.name,
-    validUntil: new Date(`${validUntil}T00:00:00.000Z`),
+    givenAt: new Date(`${givenKey}T00:00:00.000Z`),
+    validUntil: new Date(`${untilKey}T00:00:00.000Z`),
   };
 
   const vaccination = existing
@@ -77,4 +79,26 @@ export async function POST(request: Request) {
       });
 
   return NextResponse.json({ vaccination });
+}
+
+export async function DELETE(request: Request) {
+  const auth = await requireFarmAccess(farmIdFromRequest(request));
+  if (!auth) {
+    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+  }
+
+  const id = new URL(request.url).searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "נתונים לא תקינים" }, { status: 400 });
+  }
+
+  const vaccination = await prisma.animalVaccination.findFirst({
+    where: { id, animal: { breederId: auth.breeder.id } },
+  });
+  if (!vaccination) {
+    return NextResponse.json({ error: "חיסון לא נמצא" }, { status: 404 });
+  }
+
+  await prisma.animalVaccination.delete({ where: { id: vaccination.id } });
+  return NextResponse.json({ ok: true });
 }

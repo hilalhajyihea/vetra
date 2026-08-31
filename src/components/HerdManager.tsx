@@ -8,6 +8,7 @@ import { t, type Locale } from "@/lib/i18n";
 type Vaccine = {
   id: string;
   name: string;
+  givenAt?: string | null;
   validUntil: string;
 };
 
@@ -29,6 +30,7 @@ type Group = {
 type VaccineType = {
   id: string;
   name: string;
+  validMonths?: number;
 };
 
 type Props = {
@@ -57,7 +59,7 @@ export function HerdManager({ locale, farmId }: Props) {
   const [groupId, setGroupId] = useState("");
   const [vaccineTypes, setVaccineTypes] = useState<VaccineType[]>([]);
   const [vaccineDrafts, setVaccineDrafts] = useState<
-    Record<string, { vaccineTypeId: string; validUntil: string }>
+    Record<string, { vaccineTypeId: string; givenAt: string }>
   >({});
 
   const load = useCallback(async () => {
@@ -211,7 +213,7 @@ export function HerdManager({ locale, farmId }: Props) {
   async function addVaccine(animalId: string, e: FormEvent) {
     e.preventDefault();
     const draft = vaccineDrafts[animalId];
-    if (!draft?.vaccineTypeId || !draft.validUntil) return;
+    if (!draft?.vaccineTypeId || !draft.givenAt) return;
     setError("");
     const res = await fetch("/api/breeder/vaccinations", {
       method: "POST",
@@ -219,7 +221,7 @@ export function HerdManager({ locale, farmId }: Props) {
       body: JSON.stringify({
         animalId,
         vaccineTypeId: draft.vaccineTypeId,
-        validUntil: draft.validUntil,
+        givenAt: draft.givenAt,
         farmId,
       }),
     });
@@ -229,8 +231,25 @@ export function HerdManager({ locale, farmId }: Props) {
     }
     setVaccineDrafts((prev) => ({
       ...prev,
-      [animalId]: { vaccineTypeId: "", validUntil: "" },
+      [animalId]: { vaccineTypeId: "", givenAt: "" },
     }));
+    load();
+  }
+
+  async function deleteVaccineRecord(vaccine: Vaccine) {
+    if (!window.confirm(t(locale, "confirmDeleteAnimalVaccine", { name: vaccine.name }))) {
+      return;
+    }
+    setError("");
+    const params = new URLSearchParams({ id: vaccine.id });
+    if (farmId) params.set("farmId", farmId);
+    const res = await fetch(`/api/breeder/vaccinations?${params}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      setError(t(locale, "updateFailed"));
+      return;
+    }
     load();
   }
 
@@ -422,16 +441,36 @@ export function HerdManager({ locale, farmId }: Props) {
                           return (
                             <li
                               key={v.id}
-                              className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+                              className={`flex flex-wrap items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${
                                 valid
                                   ? "bg-emerald-900/70 text-emerald-200"
                                   : "bg-red-900/70 text-red-200"
                               }`}
                             >
-                              {v.name} · {formatIsraelDate(v.validUntil)} ·{" "}
-                              {valid
-                                ? t(locale, "vaccineValid")
-                                : t(locale, "vaccineExpired")}
+                              <span>
+                                {v.name}
+                                {v.givenAt ? (
+                                  <>
+                                    {" · "}
+                                    {t(locale, "vaccineGiven")}:{" "}
+                                    {formatIsraelDate(v.givenAt)}
+                                  </>
+                                ) : null}
+                                {" · "}
+                                {t(locale, "vaccineUntil")}:{" "}
+                                {formatIsraelDate(v.validUntil)}
+                                {" · "}
+                                {valid
+                                  ? t(locale, "vaccineValid")
+                                  : t(locale, "vaccineExpired")}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => deleteVaccineRecord(v)}
+                                className="rounded-md border border-white/20 px-1.5 py-0.5 text-[11px]"
+                              >
+                                {t(locale, "deleteVaccine")}
+                              </button>
                             </li>
                           );
                         })}
@@ -453,7 +492,7 @@ export function HerdManager({ locale, farmId }: Props) {
                                 ...prev,
                                 [animal.id]: {
                                   vaccineTypeId: e.target.value,
-                                  validUntil: prev[animal.id]?.validUntil || "",
+                                  givenAt: prev[animal.id]?.givenAt || "",
                                 },
                               }))
                             }
@@ -463,25 +502,31 @@ export function HerdManager({ locale, farmId }: Props) {
                             {vaccineTypes.map((type) => (
                               <option key={type.id} value={type.id}>
                                 {type.name}
+                                {type.validMonths
+                                  ? ` (${type.validMonths} ${t(locale, "vaccineMonthsUnit")})`
+                                  : ""}
                               </option>
                             ))}
                           </select>
-                          <input
-                            type="date"
-                            className="shop-field rounded-xl px-3 py-2 text-sm"
-                            value={vaccineDrafts[animal.id]?.validUntil || ""}
-                            onChange={(e) =>
-                              setVaccineDrafts((prev) => ({
-                                ...prev,
-                                [animal.id]: {
-                                  vaccineTypeId:
-                                    prev[animal.id]?.vaccineTypeId || "",
-                                  validUntil: e.target.value,
-                                },
-                              }))
-                            }
-                            required
-                          />
+                          <label className="text-xs">
+                            {t(locale, "vaccineGiven")}
+                            <input
+                              type="date"
+                              className="shop-field mt-1 rounded-xl px-3 py-2 text-sm"
+                              value={vaccineDrafts[animal.id]?.givenAt || ""}
+                              onChange={(e) =>
+                                setVaccineDrafts((prev) => ({
+                                  ...prev,
+                                  [animal.id]: {
+                                    vaccineTypeId:
+                                      prev[animal.id]?.vaccineTypeId || "",
+                                    givenAt: e.target.value,
+                                  },
+                                }))
+                              }
+                              required
+                            />
+                          </label>
                           <button
                             type="submit"
                             className="btn-primary rounded-xl px-3 py-2 text-sm font-semibold"

@@ -1,18 +1,22 @@
-import { ComingSoonSection } from "@/components/ComingSoonSection";
-import { normalizeLocale } from "@/lib/i18n";
+import type { Metadata } from "next";
+import { BookingBoard } from "@/components/BookingBoard";
+import { normalizeLocale, t } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ slug: string; breederId: string }> };
 
-export default async function Page({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const vet = await prisma.veterinarian.findUnique({ where: { slug } });
-  return (
-    <ComingSoonSection
-      locale={normalizeLocale(vet?.locale)}
-      titleKey="navBook"
-    />
-  );
+  const locale = normalizeLocale(vet?.locale);
+  return { title: `${t(locale, "brand")} · ${t(locale, "bookingTitle")}` };
+}
+
+export default async function VetFarmBookPage({ params }: Props) {
+  const { slug, breederId } = await params;
+  const vet = await prisma.veterinarian.findUnique({ where: { slug } });
+  const locale = normalizeLocale(vet?.locale);
+  return <BookingBoard slug={slug} locale={locale} farmId={breederId} />;
 }

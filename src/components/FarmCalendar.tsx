@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { formatIsraelDate, jerusalemTodayKey } from "@/lib/herd";
 import { t, type Locale, type MsgKey } from "@/lib/i18n";
 
-type EventKind = "vaccine" | "mating" | "lambing" | "checkup1" | "checkup2";
+type EventKind =
+  | "vaccine"
+  | "vaccineGiven"
+  | "mating"
+  | "lambing"
+  | "checkup1"
+  | "checkup2";
 
 type CalendarEvent = {
   date: string;
@@ -47,7 +53,8 @@ const WEEKDAY_KEYS = [
 ] as const;
 
 const EVENT_KEYS: Record<EventKind, MsgKey> = {
-  vaccine: "eventVaccine",
+  vaccine: "eventVaccineDue",
+  vaccineGiven: "eventVaccineGiven",
   mating: "eventMating",
   lambing: "eventLambing",
   checkup1: "eventCheckup1",
@@ -108,7 +115,10 @@ export function FarmCalendar({ locale, farmId }: Props) {
 
   function eventTitle(event: CalendarEvent) {
     if (event.kind === "vaccine") {
-      return t(locale, "eventVaccine", { name: event.name || "" });
+      return t(locale, "eventVaccineDue", { name: event.name || "" });
+    }
+    if (event.kind === "vaccineGiven") {
+      return t(locale, "eventVaccineGiven", { name: event.name || "" });
     }
     return t(locale, EVENT_KEYS[event.kind]);
   }

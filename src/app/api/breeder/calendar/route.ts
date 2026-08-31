@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 type EventKind =
   | "vaccine"
+  | "vaccineGiven"
   | "mating"
   | "lambing"
   | "checkup1"
@@ -60,6 +61,14 @@ export async function GET(request: Request) {
   for (const animal of animals) {
     const groupName = animal.group.name;
     for (const vaccine of animal.vaccinations) {
+      pushEvent(
+        events,
+        vaccine.givenAt,
+        "vaccineGiven",
+        animal.number,
+        groupName,
+        vaccine.name,
+      );
       pushEvent(
         events,
         vaccine.validUntil,
