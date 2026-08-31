@@ -326,7 +326,7 @@ function PregnancyFields({
           checked={value.pregnant}
           onChange={(e) => onChange({ pregnant: e.target.checked })}
         />
-        {value.pregnant ? t(locale, "pregnantYes") : t(locale, "pregnantNo")}
+        {t(locale, "pregnant")}
       </label>
       {showMethod ? (
         <label className="text-sm">
