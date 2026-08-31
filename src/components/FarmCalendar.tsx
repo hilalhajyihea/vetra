@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { formatClock } from "@/lib/booking";
 import { formatIsraelDate, jerusalemTodayKey } from "@/lib/herd";
 import { t, type Locale, type MsgKey } from "@/lib/i18n";
 
@@ -11,14 +12,17 @@ type EventKind =
   | "mating"
   | "lambing"
   | "checkup1"
-  | "checkup2";
+  | "checkup2"
+  | "appointment";
 
 type CalendarEvent = {
   date: string;
   kind: EventKind;
   name?: string;
-  animalNumber: string;
-  groupName: string;
+  animalNumber?: string;
+  groupName?: string;
+  startMin?: number;
+  status?: string;
 };
 
 type Props = {
@@ -52,7 +56,7 @@ const WEEKDAY_KEYS = [
   "weekday7",
 ] as const;
 
-const EVENT_KEYS: Record<EventKind, MsgKey> = {
+const EVENT_KEYS: Record<Exclude<EventKind, "appointment">, MsgKey> = {
   vaccine: "eventVaccineDue",
   vaccineGiven: "eventVaccineGiven",
   mating: "eventMating",
@@ -60,6 +64,34 @@ const EVENT_KEYS: Record<EventKind, MsgKey> = {
   checkup1: "eventCheckup1",
   checkup2: "eventCheckup2",
 };
+
+function isBooking(event: CalendarEvent) {
+  return event.kind === "appointment";
+}
+
+function dayStyle(
+  events: CalendarEvent[] | undefined,
+  isSelected: boolean,
+  isToday: boolean,
+) {
+  const list = events || [];
+  const hasBooking = list.some(isBooking);
+  const hasHerd = list.some((event) => !isBooking(event));
+  const todayRing = isToday && !isSelected ? "ring-1 ring-[var(--hay)]" : "";
+  if (isSelected) {
+    return `bg-[var(--teal)] font-semibold text-[var(--cream)] ${todayRing}`;
+  }
+  if (hasBooking && hasHerd) {
+    return `bg-[var(--hay)]/35 font-semibold text-[var(--cream)] ring-2 ring-sky-400 hover:bg-[var(--hay)]/50 ${todayRing}`;
+  }
+  if (hasBooking) {
+    return `bg-sky-700/70 font-semibold text-sky-50 hover:bg-sky-600/80 ${todayRing}`;
+  }
+  if (hasHerd) {
+    return `bg-[var(--hay)]/35 font-semibold text-[var(--cream)] hover:bg-[var(--hay)]/50 ${todayRing}`;
+  }
+  return `text-[rgba(244,239,230,0.78)] hover:bg-white/10 ${todayRing}`;
+}
 
 function withFarm(path: string, farmId?: string) {
   if (!farmId) return path;
@@ -114,6 +146,12 @@ export function FarmCalendar({ locale, farmId }: Props) {
   const selectedEvents = selected ? byDate.get(selected) || [] : [];
 
   function eventTitle(event: CalendarEvent) {
+    if (event.kind === "appointment") {
+      const time = formatClock(event.startMin || 0);
+      return event.status === "APPROVED"
+        ? t(locale, "eventAppointmentApproved", { time })
+        : t(locale, "eventAppointmentPending", { time });
+    }
     if (event.kind === "vaccine") {
       return t(locale, "eventVaccineDue", { name: event.name || "" });
     }
@@ -153,6 +191,16 @@ export function FarmCalendar({ locale, farmId }: Props) {
       <p className="mt-3 text-sm text-[rgba(244,239,230,0.62)]">
         {t(locale, "calendarPickDay")}
       </p>
+      <div className="mt-3 flex flex-wrap gap-3 text-xs">
+        <span className="inline-flex items-center gap-2">
+          <span className="h-3 w-3 rounded bg-[var(--hay)]/70" />
+          {t(locale, "calendarLegendHerd")}
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span className="h-3 w-3 rounded bg-sky-600" />
+          {t(locale, "calendarLegendBooking")}
+        </span>
+      </div>
 
       {error ? (
         <p className="mt-4 rounded-lg border border-red-400/30 bg-red-950/70 px-3 py-2 text-sm text-red-200">
@@ -185,7 +233,8 @@ export function FarmCalendar({ locale, farmId }: Props) {
                 (_, index) => {
                   const day = index + 1;
                   const key = dateKey(year, month, day);
-                  const hasEvents = byDate.has(key);
+                  const dayEvents = byDate.get(key);
+                  const hasEvents = Boolean(dayEvents?.length);
                   const isToday = key === today;
                   const isSelected = key === selected;
                   return (
@@ -198,13 +247,7 @@ export function FarmCalendar({ locale, farmId }: Props) {
                           ? `${formatIsraelDate(key)} · ${t(locale, "calendarHasEvents")}`
                           : formatIsraelDate(key)
                       }
-                      className={`rounded-lg py-1.5 text-sm transition ${
-                        isSelected
-                          ? "bg-[var(--teal)] font-semibold text-[var(--cream)]"
-                          : hasEvents
-                            ? "bg-[var(--hay)]/35 font-semibold text-[var(--cream)] hover:bg-[var(--hay)]/50"
-                            : "text-[rgba(244,239,230,0.78)] hover:bg-white/10"
-                      } ${isToday && !isSelected ? "ring-1 ring-[var(--hay)]" : ""}`}
+                      className={`rounded-lg py-1.5 text-sm transition ${dayStyle(dayEvents, isSelected, isToday)}`}
                     >
                       {day}
                     </button>
@@ -236,15 +279,27 @@ export function FarmCalendar({ locale, farmId }: Props) {
             <ul className="mt-4 space-y-2">
               {selectedEvents.map((event, index) => (
                 <li
-                  key={`${event.kind}-${event.animalNumber}-${index}`}
-                  className="rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                  key={`${event.kind}-${event.startMin || event.animalNumber}-${index}`}
+                  className={`rounded-xl border px-4 py-3 ${
+                    event.kind === "appointment"
+                      ? "border-sky-400/40 bg-sky-950/60"
+                      : "border-white/10 bg-black/20"
+                  }`}
                 >
                   <p className="font-semibold">{eventTitle(event)}</p>
-                  <p className="mt-1 text-sm text-[rgba(244,239,230,0.7)]">
-                    {t(locale, "calendarAnimal", { number: event.animalNumber })}
-                    {" · "}
-                    {event.groupName}
-                  </p>
+                  {event.kind === "appointment" ? (
+                    <p className="mt-1 text-sm text-[rgba(244,239,230,0.7)]">
+                      {event.name}
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-sm text-[rgba(244,239,230,0.7)]">
+                      {t(locale, "calendarAnimal", {
+                        number: event.animalNumber || "",
+                      })}
+                      {" · "}
+                      {event.groupName}
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>

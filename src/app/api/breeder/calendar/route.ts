@@ -9,29 +9,34 @@ type EventKind =
   | "mating"
   | "lambing"
   | "checkup1"
-  | "checkup2";
+  | "checkup2"
+  | "appointment";
 
 function pushEvent(
   events: Array<{
     date: string;
     kind: EventKind;
     name?: string;
-    animalNumber: string;
-    groupName: string;
+    animalNumber?: string;
+    groupName?: string;
+    startMin?: number;
+    status?: string;
   }>,
   date: Date | null | undefined,
   kind: EventKind,
-  animalNumber: string,
-  groupName: string,
-  name?: string,
+  extra?: {
+    animalNumber?: string;
+    groupName?: string;
+    name?: string;
+    startMin?: number;
+    status?: string;
+  },
 ) {
   if (!date) return;
   events.push({
     date: toDateKey(date),
     kind,
-    name,
-    animalNumber,
-    groupName,
+    ...extra,
   });
 }
 
@@ -54,34 +59,57 @@ export async function GET(request: Request) {
     date: string;
     kind: EventKind;
     name?: string;
-    animalNumber: string;
-    groupName: string;
+    animalNumber?: string;
+    groupName?: string;
+    startMin?: number;
+    status?: string;
   }> = [];
 
   for (const animal of animals) {
     const groupName = animal.group.name;
     for (const vaccine of animal.vaccinations) {
-      pushEvent(
-        events,
-        vaccine.givenAt,
-        "vaccineGiven",
-        animal.number,
+      pushEvent(events, vaccine.givenAt, "vaccineGiven", {
+        animalNumber: animal.number,
         groupName,
-        vaccine.name,
-      );
-      pushEvent(
-        events,
-        vaccine.validUntil,
-        "vaccine",
-        animal.number,
+        name: vaccine.name,
+      });
+      pushEvent(events, vaccine.validUntil, "vaccine", {
+        animalNumber: animal.number,
         groupName,
-        vaccine.name,
-      );
+        name: vaccine.name,
+      });
     }
-    pushEvent(events, animal.matingDate, "mating", animal.number, groupName);
-    pushEvent(events, animal.lambingDate, "lambing", animal.number, groupName);
-    pushEvent(events, animal.checkup1Date, "checkup1", animal.number, groupName);
-    pushEvent(events, animal.checkup2Date, "checkup2", animal.number, groupName);
+    pushEvent(events, animal.matingDate, "mating", {
+      animalNumber: animal.number,
+      groupName,
+    });
+    pushEvent(events, animal.lambingDate, "lambing", {
+      animalNumber: animal.number,
+      groupName,
+    });
+    pushEvent(events, animal.checkup1Date, "checkup1", {
+      animalNumber: animal.number,
+      groupName,
+    });
+    pushEvent(events, animal.checkup2Date, "checkup2", {
+      animalNumber: animal.number,
+      groupName,
+    });
+  }
+
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      breederId: auth.breeder.id,
+      status: { in: ["PENDING", "APPROVED"] },
+    },
+    orderBy: [{ date: "asc" }, { startMin: "asc" }],
+  });
+  for (const item of appointments) {
+    pushEvent(events, item.date, "appointment", {
+      name: item.reason,
+      startMin: item.startMin,
+      status: item.status,
+    });
   }
 
   return NextResponse.json({ events });

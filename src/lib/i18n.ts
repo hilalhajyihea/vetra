@@ -332,6 +332,10 @@ const he = {
   bookingApprove: "אישור תור",
   bookingCancel: "ביטול תור",
   confirmCancelBooking: "לבטל את התור?",
+  calendarLegendHerd: "חיסון / בדיקה",
+  calendarLegendBooking: "תור",
+  eventAppointmentPending: "תור ממתין לאישור · {time}",
+  eventAppointmentApproved: "תור מאושר · {time}",
 } as const;
 
 const ar: { [K in keyof typeof he]: string } = {
@@ -660,6 +664,10 @@ const ar: { [K in keyof typeof he]: string } = {
   bookingApprove: "الموافقة على الموعد",
   bookingCancel: "إلغاء الموعد",
   confirmCancelBooking: "إلغاء هذا الموعد؟",
+  calendarLegendHerd: "تطعيم / فحص",
+  calendarLegendBooking: "موعد",
+  eventAppointmentPending: "موعد بانتظار الموافقة · {time}",
+  eventAppointmentApproved: "موعد مؤكد · {time}",
 };
 
 const dict = { he, ar } as const;
