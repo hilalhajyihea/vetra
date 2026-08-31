@@ -40,6 +40,7 @@ export async function GET(request: Request) {
       where: {
         veterinarianId: vetId,
         date: { gte: start, lt: end },
+        status: { in: ["PENDING", "APPROVED"] },
       },
       select: { date: true, startMin: true },
     }),
@@ -82,6 +83,7 @@ export async function GET(request: Request) {
       date: toDateKey(item.date),
       startMin: item.startMin,
       reason: item.reason,
+      status: item.status,
     })),
   });
 }
@@ -131,18 +133,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "SLOT_CLOSED" }, { status: 400 });
   }
 
-  try {
-    const appointment = await prisma.appointment.create({
-      data: {
-        veterinarianId: auth.breeder.veterinarianId,
-        breederId: auth.breeder.id,
-        date,
-        startMin: parsed.data.startMin,
-        reason: parsed.data.reason.trim(),
-      },
-    });
-    return NextResponse.json({ appointment });
-  } catch {
+  const clash = await prisma.appointment.findFirst({
+    where: {
+      veterinarianId: auth.breeder.veterinarianId,
+      date,
+      startMin: parsed.data.startMin,
+      status: { in: ["PENDING", "APPROVED"] },
+    },
+  });
+  if (clash) {
     return NextResponse.json({ error: "TAKEN" }, { status: 409 });
   }
+
+  const appointment = await prisma.appointment.create({
+    data: {
+      veterinarianId: auth.breeder.veterinarianId,
+      breederId: auth.breeder.id,
+      date,
+      startMin: parsed.data.startMin,
+      reason: parsed.data.reason.trim(),
+      status: "PENDING",
+    },
+  });
+  return NextResponse.json({ appointment });
 }

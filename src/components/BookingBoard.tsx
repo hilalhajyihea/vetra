@@ -11,6 +11,7 @@ type Mine = {
   date: string;
   startMin: number;
   reason: string;
+  status: string;
 };
 
 type Props = {
@@ -272,6 +273,21 @@ export function BookingBoard({ locale, farmId }: Props) {
                     from: formatClock(item.startMin),
                     to: formatClock(item.startMin + 30),
                   })}
+                </p>
+                <p
+                  className={`mt-1 font-semibold ${
+                    item.status === "APPROVED"
+                      ? "text-emerald-300"
+                      : item.status === "CANCELLED"
+                        ? "text-red-300"
+                        : "text-[var(--hay)]"
+                  }`}
+                >
+                  {item.status === "APPROVED"
+                    ? t(locale, "bookingApproved")
+                    : item.status === "CANCELLED"
+                      ? t(locale, "bookingCancelled")
+                      : t(locale, "bookingPending")}
                 </p>
                 <p className="mt-1 text-[rgba(244,239,230,0.7)]">{item.reason}</p>
               </li>

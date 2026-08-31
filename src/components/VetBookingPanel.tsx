@@ -17,6 +17,7 @@ type AppointmentRow = {
   date: string;
   startMin: number;
   reason: string;
+  status: string;
   breeder: {
     firstName: string;
     lastName: string;
@@ -85,6 +86,32 @@ export function VetBookingPanel({ locale }: { locale: Locale }) {
     }
     load();
   }
+
+  async function setAppointmentStatus(
+    id: string,
+    status: "APPROVED" | "CANCELLED",
+  ) {
+    if (
+      status === "CANCELLED" &&
+      !window.confirm(t(locale, "confirmCancelBooking"))
+    ) {
+      return;
+    }
+    setError("");
+    const res = await fetch("/api/vet/appointments", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    if (!res.ok) {
+      setError(t(locale, "updateFailed"));
+      return;
+    }
+    load();
+  }
+
+  const pending = appointments.filter((item) => item.status === "PENDING");
+  const approved = appointments.filter((item) => item.status === "APPROVED");
 
   return (
     <section className="mt-10">
@@ -183,7 +210,7 @@ export function VetBookingPanel({ locale }: { locale: Locale }) {
         </p>
       ) : (
         <ul className="mt-3 space-y-2">
-          {appointments.map((item) => (
+          {[...pending, ...approved].map((item) => (
             <li key={item.id} className="surface-dark rounded-2xl px-4 py-3 text-sm">
               <p className="font-semibold">
                 {formatIsraelDate(item.date)} ·{" "}
@@ -192,11 +219,40 @@ export function VetBookingPanel({ locale }: { locale: Locale }) {
                   to: formatClock(item.startMin + 30),
                 })}
               </p>
+              <p
+                className={`mt-1 font-semibold ${
+                  item.status === "APPROVED"
+                    ? "text-emerald-300"
+                    : "text-[var(--hay)]"
+                }`}
+              >
+                {item.status === "APPROVED"
+                  ? t(locale, "bookingApproved")
+                  : t(locale, "bookingPending")}
+              </p>
               <p className="mt-1 text-[rgba(244,239,230,0.7)]">
                 {item.breeder.firstName} {item.breeder.lastName} · {item.breeder.farmName}{" "}
                 · {item.breeder.phone}
               </p>
               <p className="mt-1">{item.reason}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {item.status === "PENDING" ? (
+                  <button
+                    type="button"
+                    className="btn-primary rounded-xl px-4 py-2 text-sm font-semibold"
+                    onClick={() => setAppointmentStatus(item.id, "APPROVED")}
+                  >
+                    {t(locale, "bookingApprove")}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="rounded-xl border border-red-400/30 px-4 py-2 text-sm text-red-200"
+                  onClick={() => setAppointmentStatus(item.id, "CANCELLED")}
+                >
+                  {t(locale, "bookingCancel")}
+                </button>
+              </div>
             </li>
           ))}
         </ul>

@@ -152,12 +152,14 @@ model Appointment {
   date           DateTime @db.Date
   startMin       Int
   reason         String
+  /// PENDING | APPROVED | CANCELLED
+  status         String   @default("PENDING")
   createdAt      DateTime @default(now())
 
   veterinarian Veterinarian @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
   breeder      Breeder      @relation(fields: [breederId], references: [id], onDelete: Cascade)
 
-  @@unique([veterinarianId, date, startMin])
   @@index([breederId])
   @@index([veterinarianId, date])
+  @@index([veterinarianId, date, startMin])
 }

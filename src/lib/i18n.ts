@@ -310,7 +310,7 @@ const he = {
   bookingNoSlots: "אין שעות פנויות ביום הזה",
   bookingPickDay: "לחצו על יום פתוח כדי לבחור שעה",
   bookingTaken: "השעה כבר תפוסה",
-  bookingSaved: "התור נשמר",
+  bookingSaved: "הבקשה נשלחה וממתינה לאישור הווטרינר",
   bookingOpenDays: "פתיחת ימים לשריון",
   bookingOpenLead:
     "בחרו תאריך וחלון שעות. כל הקצאה היא חצי שעה. אפשר כמה חלונות באותו יום, למשל 10:00–12:00 ו־14:00–18:00.",
@@ -326,6 +326,12 @@ const he = {
   bookingBreeder: "מגדל",
   errWindowInvalid: "חלון השעות לא תקין",
   errPastSlot: "אי אפשר לשריין שעה שעברה",
+  bookingPending: "ממתין לאישור",
+  bookingApproved: "התור אושר",
+  bookingCancelled: "התור בוטל",
+  bookingApprove: "אישור תור",
+  bookingCancel: "ביטול תור",
+  confirmCancelBooking: "לבטל את התור?",
 } as const;
 
 const ar: { [K in keyof typeof he]: string } = {
@@ -632,7 +638,7 @@ const ar: { [K in keyof typeof he]: string } = {
   bookingNoSlots: "لا ساعات متاحة في هذا اليوم",
   bookingPickDay: "اضغطوا على يوم مفتوح لاختيار ساعة",
   bookingTaken: "هذه الساعة محجوزة",
-  bookingSaved: "تم حفظ الموعد",
+  bookingSaved: "أُرسل الطلب وبانتظار موافقة الطبيب",
   bookingOpenDays: "فتح أيام للحجز",
   bookingOpenLead:
     "اختاروا تاريخًا ونافذة ساعات. كل حجز نصف ساعة. يمكن عدة نوافذ في نفس اليوم، مثل 10:00–12:00 و14:00–18:00.",
@@ -648,6 +654,12 @@ const ar: { [K in keyof typeof he]: string } = {
   bookingBreeder: "المربّي",
   errWindowInvalid: "نافذة الساعات غير صالحة",
   errPastSlot: "لا يمكن حجز ساعة مضت",
+  bookingPending: "بانتظار الموافقة",
+  bookingApproved: "تمت الموافقة على الموعد",
+  bookingCancelled: "أُلغي الموعد",
+  bookingApprove: "الموافقة على الموعد",
+  bookingCancel: "إلغاء الموعد",
+  confirmCancelBooking: "إلغاء هذا الموعد؟",
 };
 
 const dict = { he, ar } as const;
