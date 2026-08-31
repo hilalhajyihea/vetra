@@ -342,7 +342,7 @@ const he = {
   vaccineApprovalsLead:
     "חיסונים שהמגדל הוסיף ממתינים לאישור. אפשר לאשר חיסון בודד, את כל החיסונים של חיה, או את הכל בבת אחת.",
   vaccineNoPendingApprovals: "אין חיסונים הממתינים לאישור",
-  vaccineApproveAnimal: "אישור הכל",
+  vaccineApproveAnimal: "אישור לכל החיה",
   vaccineApproveAll: "אשר הכל",
   confirmApproveAllVaccines: "לאשר את כל החיסונים הממתינים?",
   vaccineApprovedCount: "אושרו {count} חיסונים",
@@ -684,7 +684,7 @@ const ar: { [K in keyof typeof he]: string } = {
   vaccineApprovalsLead:
     "التطعيمات التي أضافها المربّي بانتظار الموافقة. يمكن الموافقة على تطعيم واحد، أو كل تطعيمات الحيوان، أو الكل دفعة واحدة.",
   vaccineNoPendingApprovals: "لا تطعيمات بانتظار الموافقة",
-  vaccineApproveAnimal: "الموافقة على الكل",
+  vaccineApproveAnimal: "الموافقة على كل الحيوان",
   vaccineApproveAll: "الموافقة على الكل",
   confirmApproveAllVaccines: "الموافقة على كل التطعيمات المنتظرة؟",
   vaccineApprovedCount: "تمت الموافقة على {count} تطعيمات",
