@@ -36,7 +36,12 @@ export async function GET(request: Request) {
     const animals = groups.flatMap((group) =>
       group.animals
         .map((animal) => {
-          const record = animalRecordForType(animal.vaccinations, type);
+          const record = animalRecordForType(
+            animal.vaccinations.filter(
+              (item) => !item.status || item.status === "APPROVED",
+            ),
+            type,
+          );
           if (!record) return null;
           return {
             id: animal.id,

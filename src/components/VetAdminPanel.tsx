@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandGraphics";
 import { VaccineCatalogEditor } from "@/components/VaccineCatalogEditor";
 import { VetBookingPanel } from "@/components/VetBookingPanel";
+import { VetVaccineApprovals } from "@/components/VetVaccineApprovals";
 import { t, type Locale } from "@/lib/i18n";
 
 type BreederRow = {
@@ -124,6 +125,8 @@ export function VetAdminPanel({
       ) : null}
 
       <VaccineCatalogEditor locale={locale} />
+
+      <VetVaccineApprovals locale={locale} />
 
       <VetBookingPanel locale={locale} />
 

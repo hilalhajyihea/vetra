@@ -121,6 +121,8 @@ model AnimalVaccination {
   givenAt       DateTime? @db.Date
   /// Computed from givenAt + vaccine type months
   validUntil    DateTime @db.Date
+  /// PENDING | APPROVED
+  status        String   @default("APPROVED")
   createdAt     DateTime @default(now())
 
   animal      Animal       @relation(fields: [animalId], references: [id], onDelete: Cascade)

@@ -64,6 +64,7 @@ export async function POST(request: Request) {
     name: type.name,
     givenAt: new Date(`${givenKey}T00:00:00.000Z`),
     validUntil: new Date(`${untilKey}T00:00:00.000Z`),
+    status: auth.actor === "vet" ? "APPROVED" : "PENDING",
   };
 
   const vaccination = existing

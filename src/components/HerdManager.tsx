@@ -10,6 +10,7 @@ type Vaccine = {
   name: string;
   givenAt?: string | null;
   validUntil: string;
+  status?: string;
 };
 
 type Animal = {
@@ -236,6 +237,20 @@ export function HerdManager({ locale, farmId }: Props) {
     load();
   }
 
+  async function approveVaccines(body: { id?: string; animalId?: string }) {
+    setError("");
+    const res = await fetch("/api/vet/vaccine-approvals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      setError(t(locale, "updateFailed"));
+      return;
+    }
+    load();
+  }
+
   async function deleteVaccineRecord(vaccine: Vaccine) {
     if (!window.confirm(t(locale, "confirmDeleteAnimalVaccine", { name: vaccine.name }))) {
       return;
@@ -434,17 +449,32 @@ export function HerdManager({ locale, farmId }: Props) {
                     </div>
 
                     <div className="mt-4">
-                      <p className="text-sm font-semibold">{t(locale, "vaccines")}</p>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-sm font-semibold">{t(locale, "vaccines")}</p>
+                        {farmId &&
+                        animal.vaccinations.some((v) => v.status === "PENDING") ? (
+                          <button
+                            type="button"
+                            className="rounded-lg border border-[var(--hay)]/40 px-2.5 py-1 text-xs font-semibold text-[var(--hay)]"
+                            onClick={() => approveVaccines({ animalId: animal.id })}
+                          >
+                            {t(locale, "vaccineApproveAnimal")}
+                          </button>
+                        ) : null}
+                      </div>
                       <ul className="mt-2 flex flex-wrap gap-2">
                         {animal.vaccinations.map((v) => {
+                          const pending = v.status === "PENDING";
                           const valid = isVaccineValid(v.validUntil);
                           return (
                             <li
                               key={v.id}
                               className={`flex flex-wrap items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${
-                                valid
-                                  ? "bg-emerald-900/70 text-emerald-200"
-                                  : "bg-red-900/70 text-red-200"
+                                pending
+                                  ? "bg-amber-900/70 text-[var(--hay)]"
+                                  : valid
+                                    ? "bg-emerald-900/70 text-emerald-200"
+                                    : "bg-red-900/70 text-red-200"
                               }`}
                             >
                               <span>
@@ -460,10 +490,23 @@ export function HerdManager({ locale, farmId }: Props) {
                                 {t(locale, "vaccineUntil")}:{" "}
                                 {formatIsraelDate(v.validUntil)}
                                 {" · "}
-                                {valid
-                                  ? t(locale, "vaccineValid")
-                                  : t(locale, "vaccineExpired")}
+                                {pending
+                                  ? t(locale, "vaccinePending")
+                                  : `${t(locale, "vaccineApproved")} · ${
+                                      valid
+                                        ? t(locale, "vaccineValid")
+                                        : t(locale, "vaccineExpired")
+                                    }`}
                               </span>
+                              {farmId && pending ? (
+                                <button
+                                  type="button"
+                                  onClick={() => approveVaccines({ id: v.id })}
+                                  className="rounded-md border border-[var(--hay)]/50 px-1.5 py-0.5 text-[11px]"
+                                >
+                                  {t(locale, "approve")}
+                                </button>
+                              ) : null}
                               <button
                                 type="button"
                                 onClick={() => deleteVaccineRecord(v)}

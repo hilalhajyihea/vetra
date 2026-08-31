@@ -68,6 +68,7 @@ export async function GET(request: Request) {
   for (const animal of animals) {
     const groupName = animal.group.name;
     for (const vaccine of animal.vaccinations) {
+      if (vaccine.status && vaccine.status !== "APPROVED") continue;
       pushEvent(events, vaccine.givenAt, "vaccineGiven", {
         animalNumber: animal.number,
         groupName,
