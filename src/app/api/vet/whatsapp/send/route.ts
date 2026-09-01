@@ -34,6 +34,7 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "נתונים לא תקינים" }, { status: 400 });
   }
+  const payload = parsed.data;
 
   const vet = await prisma.veterinarian.findUnique({
     where: { id: session.vetId },
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
     name: string,
     farm: string,
   ) {
-    const body = fillWhatsAppTemplate(parsed.data.text, {
+    const body = fillWhatsAppTemplate(payload.text, {
       name,
       farm,
       clinic,
@@ -80,7 +81,7 @@ export async function POST(request: Request) {
     });
   }
 
-  if (parsed.data.testSelf) {
+  if (payload.testSelf) {
     if (!vet.phone) {
       return NextResponse.json({ error: "PHONE_MISSING" }, { status: 400 });
     }
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ results });
   }
 
-  const ids = parsed.data.breederIds || [];
+  const ids = payload.breederIds || [];
   if (!ids.length) {
     return NextResponse.json({ error: "EMPTY" }, { status: 400 });
   }
