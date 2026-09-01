@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requirePlatformSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createVet, isValidSlug, resetVetPassword } from "@/lib/vets";
+import { isValidMobile, normalizePhone } from "@/lib/phone";
 
 export async function GET() {
   const session = await requirePlatformSession();
@@ -126,7 +127,14 @@ export async function PATCH(request: Request) {
       ...(parsed.data.locale ? { locale: parsed.data.locale } : {}),
       ...(parsed.data.plan ? { plan: parsed.data.plan } : {}),
       ...(parsed.data.phone !== undefined
-        ? { phone: parsed.data.phone?.trim() || null }
+        ? {
+            phone: (() => {
+              const raw = parsed.data.phone?.trim() || "";
+              if (!raw) return null;
+              const normalized = normalizePhone(raw);
+              return isValidMobile(normalized) ? normalized : raw;
+            })(),
+          }
         : {}),
     },
   });

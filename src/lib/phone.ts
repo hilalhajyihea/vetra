@@ -10,3 +10,19 @@ export function normalizePhone(raw: string): string {
 export function isValidMobile(phone: string): boolean {
   return /^05\d{8}$/.test(phone);
 }
+
+/** Digits for wa.me, e.g. 972501234567 */
+export function toWhatsAppDigits(phone: string): string | null {
+  const local = normalizePhone(phone);
+  if (!isValidMobile(local)) return null;
+  return `972${local.slice(1)}`;
+}
+
+export function whatsappChatHref(phone: string, text: string): string | null {
+  const digits = toWhatsAppDigits(phone);
+  if (!digits) return null;
+  const encoded = encodeURIComponent(text);
+  return encoded
+    ? `https://wa.me/${digits}?text=${encoded}`
+    : `https://wa.me/${digits}`;
+}

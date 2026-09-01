@@ -1,4 +1,5 @@
 import { compare, hash } from "bcryptjs";
+import { isValidMobile, normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 
 export const RESERVED_SLUGS = new Set([
@@ -48,7 +49,11 @@ export async function createVet(input: {
       username: input.username.trim(),
       passwordHash,
       locale: input.locale === "ar" ? "ar" : "he",
-      phone: input.phone?.trim() || null,
+      phone: input.phone?.trim()
+        ? isValidMobile(normalizePhone(input.phone))
+          ? normalizePhone(input.phone)
+          : input.phone.trim()
+        : null,
       plan: input.plan === "CUSTOM" ? "CUSTOM" : "BASE",
     },
   });

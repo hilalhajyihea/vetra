@@ -7,6 +7,7 @@ import { BrandMark } from "@/components/BrandGraphics";
 import { VaccineCatalogEditor } from "@/components/VaccineCatalogEditor";
 import { VetBookingPanel } from "@/components/VetBookingPanel";
 import { VetVaccineApprovals } from "@/components/VetVaccineApprovals";
+import { VetWhatsAppPanel } from "@/components/VetWhatsAppPanel";
 import { t, type Locale } from "@/lib/i18n";
 
 type BreederRow = {
@@ -127,6 +128,13 @@ export function VetAdminPanel({
       <VaccineCatalogEditor locale={locale} />
 
       <VetVaccineApprovals locale={locale} />
+
+      <VetWhatsAppPanel
+        locale={locale}
+        clinicName={clinicName}
+        displayName={displayName}
+        breeders={approved}
+      />
 
       <VetBookingPanel locale={locale} />
 
