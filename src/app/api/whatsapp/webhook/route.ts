@@ -6,7 +6,7 @@ function verifyToken() {
   return process.env.WHATSAPP_VERIFY_TOKEN || "";
 }
 
-/** Meta / Dualhook handshake — return raw challenge as plain text. */
+/** Meta Cloud API handshake — return raw challenge as plain text. */
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const mode = url.searchParams.get("hub.mode");

@@ -4,21 +4,52 @@ function env(name: string) {
   return process.env[name]?.trim() || "";
 }
 
+function metaToken() {
+  return env("WHATSAPP_ACCESS_TOKEN") || env("META_WHATSAPP_TOKEN");
+}
+
+function dualhookKey() {
+  return env("DUALHOOK_API_KEY");
+}
+
+function phoneNumberId() {
+  return env("WHATSAPP_PHONE_NUMBER_ID") || env("DUALHOOK_PHONE_NUMBER_ID");
+}
+
+function accessToken() {
+  return metaToken() || dualhookKey();
+}
+
+function useMetaDirect() {
+  return Boolean(metaToken());
+}
+
+function graphVersion() {
+  return env("WHATSAPP_GRAPH_VERSION") || "v21.0";
+}
+
 export function dualhookConfigured() {
-  return Boolean(env("DUALHOOK_API_KEY") && env("DUALHOOK_PHONE_NUMBER_ID"));
+  return Boolean(accessToken() && phoneNumberId());
 }
 
 function templateName() {
-  return env("DUALHOOK_TEMPLATE_NAME") || "hello_world";
+  return (
+    env("WHATSAPP_TEMPLATE_NAME") ||
+    env("DUALHOOK_TEMPLATE_NAME") ||
+    "hello_world"
+  );
 }
 
 function templateLanguage() {
-  if (env("DUALHOOK_TEMPLATE_LANGUAGE")) return env("DUALHOOK_TEMPLATE_LANGUAGE");
+  const explicit =
+    env("WHATSAPP_TEMPLATE_LANGUAGE") || env("DUALHOOK_TEMPLATE_LANGUAGE");
+  if (explicit) return explicit;
   return templateName() === "hello_world" ? "en_US" : "he";
 }
 
 function templateParamCount() {
-  const raw = env("DUALHOOK_TEMPLATE_BODY_PARAMS");
+  const raw =
+    env("WHATSAPP_TEMPLATE_BODY_PARAMS") || env("DUALHOOK_TEMPLATE_BODY_PARAMS");
   if (raw === "0" || raw === "1" || raw === "2") return Number(raw);
   return templateName() === "hello_world" ? 0 : 2;
 }
@@ -28,15 +59,22 @@ function sanitizeParam(value: string) {
   return (cleaned || "-").slice(0, 1024);
 }
 
+function messagesUrl(phoneId: string) {
+  if (useMetaDirect()) {
+    return `https://graph.facebook.com/${graphVersion()}/${phoneId}/messages`;
+  }
+  return `https://api.dualhook.com/v25.0/${phoneId}/messages`;
+}
+
 export async function sendDualhookTemplate(input: {
   to: string;
   name: string;
   body: string;
 }) {
-  const key = env("DUALHOOK_API_KEY");
-  const phoneId = env("DUALHOOK_PHONE_NUMBER_ID");
+  const token = accessToken();
+  const phoneId = phoneNumberId();
   const digits = toWhatsAppDigits(input.to);
-  if (!key || !phoneId) {
+  if (!token || !phoneId) {
     return { ok: false as const, error: "NOT_CONFIGURED" };
   }
   if (!digits) {
@@ -62,35 +100,38 @@ export async function sendDualhookTemplate(input: {
     ];
   }
 
-  const res = await fetch(
-    `https://api.dualhook.com/v25.0/${phoneId}/messages`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: digits,
-        type: "template",
-        template,
-      }),
+  const res = await fetch(messagesUrl(phoneId), {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: digits,
+      type: "template",
+      template,
+    }),
+  });
 
   const data = (await res.json().catch(() => ({}))) as {
-    error?: { message?: string; error_user_msg?: string };
+    error?: {
+      message?: string;
+      error_user_msg?: string;
+      code?: number;
+    };
     messages?: Array<{ id?: string }>;
   };
 
   if (!res.ok) {
+    const detail =
+      data.error?.error_user_msg ||
+      data.error?.message ||
+      `HTTP_${res.status}`;
+    const code = data.error?.code;
     return {
       ok: false as const,
-      error:
-        data.error?.error_user_msg ||
-        data.error?.message ||
-        `HTTP_${res.status}`,
+      error: code ? `(#${code}) ${detail}` : detail,
     };
   }
 
