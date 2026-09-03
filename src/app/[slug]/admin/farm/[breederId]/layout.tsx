@@ -46,6 +46,7 @@ export default async function VetFarmLayout({ children, params }: Props) {
         clinicLabel={vet.clinicName || vet.displayName}
         basePath={`/${vet.slug}/admin/farm/${breederId}`}
         viewer="vet"
+        breederId={breederId}
       >
         {children}
       </BreederShell>

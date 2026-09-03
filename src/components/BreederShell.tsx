@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandGraphics";
@@ -23,6 +24,7 @@ type Props = {
   children: React.ReactNode;
   basePath?: string;
   viewer?: "breeder" | "vet";
+  breederId?: string;
 };
 
 export function BreederShell({
@@ -35,14 +37,49 @@ export function BreederShell({
   children,
   basePath,
   viewer = "breeder",
+  breederId,
 }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const base = basePath || `/${slug}/breeder`;
+  const fullName = `${firstName} ${lastName}`.trim();
+  const nameMatches =
+    typedName.replace(/\s+/g, " ").trim() === fullName.replace(/\s+/g, " ").trim();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [typedName, setTypedName] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push(`/${slug}`);
+  }
+
+  async function deleteBreeder() {
+    if (!breederId) return;
+    setDeleteError("");
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/vet/breeders", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: breederId, confirmName: typedName }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setDeleteError(
+          data.error === "NAME_MISMATCH"
+            ? t(locale, "deleteBreederMismatch")
+            : t(locale, "deleteBreederFailed"),
+        );
+        return;
+      }
+      router.push(`/${slug}/admin`);
+    } catch {
+      setDeleteError(t(locale, "deleteBreederFailed"));
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -104,7 +141,69 @@ export function BreederShell({
         })}
       </nav>
 
+      {viewer === "vet" && breederId ? (
+        <div className="mt-3">
+          <button
+            type="button"
+            className="rounded-xl border border-red-400/40 px-3 py-2 text-sm font-semibold text-red-200 hover:bg-red-950/40"
+            onClick={() => {
+              setTypedName("");
+              setDeleteError("");
+              setConfirmOpen(true);
+            }}
+          >
+            {t(locale, "deleteBreeder")}
+          </button>
+        </div>
+      ) : null}
+
       <div className="mt-8">{children}</div>
+
+      {confirmOpen ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center">
+          <div className="surface-dark w-full max-w-md rounded-2xl p-5">
+            <h2 className="font-display text-xl text-[var(--cream)]">
+              {t(locale, "deleteBreeder")}
+            </h2>
+            <p className="mt-2 text-sm text-[rgba(244,239,230,0.72)]">
+              {t(locale, "deleteBreederLead")}
+            </p>
+            <label className="mt-4 block text-sm font-semibold">
+              {t(locale, "deleteBreederNameLabel")}
+            </label>
+            <p className="mt-1 text-xs text-[var(--hay)]">
+              {t(locale, "deleteBreederNameHint", { name: fullName })}
+            </p>
+            <input
+              className="mt-2 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-sm"
+              value={typedName}
+              onChange={(e) => setTypedName(e.target.value)}
+              autoComplete="off"
+            />
+            {deleteError ? (
+              <p className="mt-2 text-sm text-red-200">{deleteError}</p>
+            ) : null}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="rounded-xl bg-red-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                disabled={deleting || !nameMatches}
+                onClick={deleteBreeder}
+              >
+                {t(locale, "deleteBreederConfirm")}
+              </button>
+              <button
+                type="button"
+                className="rounded-xl border border-white/20 px-4 py-2 text-sm"
+                disabled={deleting}
+                onClick={() => setConfirmOpen(false)}
+              >
+                {t(locale, "deleteBreederCancel")}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
