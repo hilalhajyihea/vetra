@@ -125,12 +125,6 @@ export function PlatformAdminPanel() {
     load();
   }
 
-  async function setVetPhone(vet: VetRow) {
-    const next = prompt(t(uiLocale, "setVetPhone"), vet.phone || "");
-    if (next == null) return;
-    await patchVet(vet.id, { phone: next.trim() || null }, t(uiLocale, "phoneUpdated"));
-  }
-
   async function resetPassword(vet: VetRow) {
     const next = prompt(t(uiLocale, "resetPassword"));
     if (!next || next.length < 6) {
@@ -355,13 +349,6 @@ export function PlatformAdminPanel() {
                 }}
               >
                 {t(uiLocale, "waLimitSave")}
-              </button>
-              <button
-                type="button"
-                className="shop-chip rounded-xl px-3 py-1.5 text-sm"
-                onClick={() => setVetPhone(vet)}
-              >
-                {t(uiLocale, "setVetPhone")}
               </button>
               <button
                 type="button"
