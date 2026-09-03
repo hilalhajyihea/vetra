@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireVetSession } from "@/lib/auth";
 import { sendWhatsAppTemplate, whatsappConfigured } from "@/lib/whatsappCloud";
+import {
+  recordSuccessfulWhatsAppSend,
+  whatsappQuotaFor,
+} from "@/lib/whatsappQuota";
 import { fillWhatsAppTemplate } from "@/lib/whatsapp";
 import { prisma } from "@/lib/prisma";
 
@@ -12,13 +16,19 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
   }
-  return NextResponse.json({ configured: whatsappConfigured() });
+  const quota = await whatsappQuotaFor(session.vetId);
+  if (!quota) {
+    return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+  }
+  return NextResponse.json({
+    configured: whatsappConfigured(),
+    ...quota,
+  });
 }
 
 const postSchema = z.object({
   text: z.string().min(1).max(1024),
   breederIds: z.array(z.string().min(1)).max(50).optional(),
-  testSelf: z.boolean().optional(),
 });
 
 export async function POST(request: Request) {
@@ -39,13 +49,16 @@ export async function POST(request: Request) {
   const vet = await prisma.veterinarian.findUnique({
     where: { id: session.vetId },
     select: {
-      phone: true,
       clinicName: true,
       displayName: true,
+      whatsappEnabled: true,
     },
   });
   if (!vet) {
     return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
+  }
+  if (!vet.whatsappEnabled) {
+    return NextResponse.json({ error: "DISABLED" }, { status: 403 });
   }
 
   const clinic = vet.clinicName || vet.displayName;
@@ -55,45 +68,6 @@ export async function POST(request: Request) {
     ok: boolean;
     error?: string;
   }> = [];
-
-  async function sendOne(
-    id: string,
-    label: string,
-    phone: string,
-    name: string,
-    farm: string,
-  ) {
-    const body = fillWhatsAppTemplate(payload.text, {
-      name,
-      farm,
-      clinic,
-    });
-    const sent = await sendWhatsAppTemplate({
-      to: phone,
-      name,
-      body,
-    });
-    results.push({
-      id,
-      name: label,
-      ok: sent.ok,
-      error: sent.ok ? undefined : sent.error,
-    });
-  }
-
-  if (payload.testSelf) {
-    if (!vet.phone) {
-      return NextResponse.json({ error: "PHONE_MISSING" }, { status: 400 });
-    }
-    await sendOne(
-      "self",
-      vet.displayName,
-      vet.phone,
-      vet.displayName,
-      clinic,
-    );
-    return NextResponse.json({ results });
-  }
 
   const ids = payload.breederIds || [];
   if (!ids.length) {
@@ -116,13 +90,36 @@ export async function POST(request: Request) {
   });
 
   for (const breeder of breeders) {
-    await sendOne(
-      breeder.id,
-      `${breeder.firstName} ${breeder.lastName}`.trim(),
-      breeder.phone,
-      breeder.firstName,
-      breeder.farmName,
-    );
+    const label = `${breeder.firstName} ${breeder.lastName}`.trim();
+    const quota = await whatsappQuotaFor(session.vetId);
+    if (!quota?.enabled) {
+      results.push({ id: breeder.id, name: label, ok: false, error: "DISABLED" });
+      continue;
+    }
+    if (quota.used >= quota.limit) {
+      results.push({ id: breeder.id, name: label, ok: false, error: "QUOTA" });
+      continue;
+    }
+
+    const body = fillWhatsAppTemplate(payload.text, {
+      name: breeder.firstName,
+      farm: breeder.farmName,
+      clinic,
+    });
+    const sent = await sendWhatsAppTemplate({
+      to: breeder.phone,
+      name: breeder.firstName,
+      body,
+    });
+    if (sent.ok) {
+      await recordSuccessfulWhatsAppSend(session.vetId);
+    }
+    results.push({
+      id: breeder.id,
+      name: label,
+      ok: sent.ok,
+      error: sent.ok ? undefined : sent.error,
+    });
   }
 
   return NextResponse.json({ results });

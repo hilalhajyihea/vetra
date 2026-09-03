@@ -20,6 +20,10 @@ model Veterinarian {
   phone        String?
   /// BASE | CUSTOM
   plan         String   @default("BASE")
+  whatsappEnabled      Boolean @default(false)
+  whatsappMonthlyLimit Int     @default(0)
+  whatsappMonthKey     String  @default("")
+  whatsappMonthCount   Int     @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

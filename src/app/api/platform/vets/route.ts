@@ -4,6 +4,7 @@ import { requirePlatformSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createVet, isValidSlug, resetVetPassword } from "@/lib/vets";
 import { isValidMobile, normalizePhone } from "@/lib/phone";
+import { monthUsage } from "@/lib/whatsappQuota";
 
 export async function GET() {
   const session = await requirePlatformSession();
@@ -24,10 +25,19 @@ export async function GET() {
       phone: true,
       plan: true,
       createdAt: true,
+      whatsappEnabled: true,
+      whatsappMonthlyLimit: true,
+      whatsappMonthKey: true,
+      whatsappMonthCount: true,
     },
   });
 
-  return NextResponse.json({ vets });
+  return NextResponse.json({
+    vets: vets.map((vet) => ({
+      ...vet,
+      whatsappUsed: monthUsage(vet),
+    })),
+  });
 }
 
 const createSchema = z.object({
@@ -94,6 +104,8 @@ const patchSchema = z.object({
   locale: z.enum(["he", "ar"]).optional(),
   plan: z.enum(["BASE", "CUSTOM"]).optional(),
   phone: z.string().max(30).nullable().optional(),
+  whatsappEnabled: z.boolean().optional(),
+  whatsappMonthlyLimit: z.number().int().min(0).max(100000).optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -135,6 +147,12 @@ export async function PATCH(request: Request) {
               return isValidMobile(normalized) ? normalized : raw;
             })(),
           }
+        : {}),
+      ...(parsed.data.whatsappEnabled !== undefined
+        ? { whatsappEnabled: parsed.data.whatsappEnabled }
+        : {}),
+      ...(parsed.data.whatsappMonthlyLimit !== undefined
+        ? { whatsappMonthlyLimit: parsed.data.whatsappMonthlyLimit }
         : {}),
     },
   });

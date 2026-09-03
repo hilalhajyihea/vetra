@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { t, type Locale } from "@/lib/i18n";
 import { fillWhatsAppTemplate, insertPlaceholder } from "@/lib/whatsapp";
 
@@ -33,33 +33,36 @@ export function VetWhatsAppPanel({
   breeders,
 }: Props) {
   const clinic = clinicName || displayName;
-  const [phone, setPhone] = useState("");
   const [text, setText] = useState(() => t(locale, "waDefaultText"));
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [configured, setConfigured] = useState(true);
+  const [enabled, setEnabled] = useState(false);
+  const [limit, setLimit] = useState(0);
+  const [used, setUsed] = useState(0);
   const [results, setResults] = useState<SendResult[]>([]);
+  const [ready, setReady] = useState(false);
 
-  const loadProfile = useCallback(async () => {
+  const loadStatus = useCallback(async () => {
     try {
-      const [profileRes, sendRes] = await Promise.all([
-        fetch("/api/vet/profile"),
-        fetch("/api/vet/whatsapp/send"),
-      ]);
-      const profile = await profileRes.json();
-      const send = await sendRes.json().catch(() => ({}));
-      setPhone(profile.phone || "");
+      const res = await fetch("/api/vet/whatsapp/send");
+      const send = await res.json().catch(() => ({}));
       if (typeof send.configured === "boolean") setConfigured(send.configured);
+      if (typeof send.enabled === "boolean") setEnabled(send.enabled);
+      if (typeof send.limit === "number") setLimit(send.limit);
+      if (typeof send.used === "number") setUsed(send.used);
     } catch {
       /* ignore */
+    } finally {
+      setReady(true);
     }
   }, []);
 
   useEffect(() => {
-    loadProfile();
-  }, [loadProfile]);
+    loadStatus();
+  }, [loadStatus]);
 
   const chosen = useMemo(
     () => breeders.filter((b) => selected[b.id]),
@@ -86,29 +89,13 @@ export function VetWhatsAppPanel({
     setSelected(next);
   }
 
-  async function savePhone(e: FormEvent) {
-    e.preventDefault();
-    setError("");
-    setMessage("");
-    const res = await fetch("/api/vet/profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setError(
-        data.error === "PHONE_INVALID"
-          ? t(locale, "errPhoneInvalid")
-          : t(locale, "updateFailed"),
-      );
-      return;
-    }
-    setPhone(data.phone || "");
-    setMessage(t(locale, "waPhoneSaved"));
+  function resultError(code?: string) {
+    if (code === "QUOTA") return t(locale, "waQuotaHit");
+    if (code === "DISABLED") return t(locale, "waDisabled");
+    return code || t(locale, "waSendFailed");
   }
 
-  async function send(body: { breederIds?: string[]; testSelf?: boolean }) {
+  async function send(body: { breederIds?: string[] }) {
     setError("");
     setMessage("");
     setResults([]);
@@ -125,8 +112,9 @@ export function VetWhatsAppPanel({
         setError(t(locale, "waNotConfigured"));
         return;
       }
-      if (data.error === "PHONE_MISSING") {
-        setError(t(locale, "waTestNeedPhone"));
+      if (data.error === "DISABLED") {
+        setEnabled(false);
+        setError(t(locale, "waDisabled"));
         return;
       }
       if (!res.ok) {
@@ -137,6 +125,7 @@ export function VetWhatsAppPanel({
       setResults(list);
       const ok = list.filter((item) => item.ok).length;
       setMessage(t(locale, "waSendResult", { ok, total: list.length }));
+      await loadStatus();
     } catch {
       setError(t(locale, "waSendFailed"));
     } finally {
@@ -156,6 +145,8 @@ export function VetWhatsAppPanel({
     send({ breederIds: chosen.map((b) => b.id) });
   }
 
+  if (!ready || !enabled) return null;
+
   return (
     <section className="mt-10">
       <h2 className="font-display text-2xl text-[var(--cream)]">
@@ -164,42 +155,12 @@ export function VetWhatsAppPanel({
       <p className="mt-2 max-w-2xl text-sm text-[rgba(244,239,230,0.62)]">
         {t(locale, "waLead")}
       </p>
+      <p className="mt-2 text-sm text-[var(--hay)]">
+        {t(locale, "waQuotaLine", { used, limit })}
+      </p>
       {!configured ? (
         <p className="mt-2 text-sm text-red-200">{t(locale, "waNotConfigured")}</p>
       ) : null}
-
-      <form
-        onSubmit={savePhone}
-        className="mt-4 flex flex-wrap items-end gap-2"
-      >
-        <label className="min-w-48 flex-1 text-xs">
-          {t(locale, "waPhoneLabel")}
-          <input
-            className="shop-field mt-1 w-full rounded-xl px-3 py-2.5"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="05xxxxxxxx"
-            dir="ltr"
-          />
-        </label>
-        <button
-          type="submit"
-          className="rounded-xl border border-white/20 px-4 py-2.5 text-sm"
-        >
-          {t(locale, "waPhoneSave")}
-        </button>
-        <button
-          type="button"
-          className="rounded-xl border border-white/20 px-4 py-2.5 text-sm"
-          onClick={() => send({ testSelf: true })}
-          disabled={sending}
-        >
-          {t(locale, "waTest")}
-        </button>
-      </form>
-      <p className="mt-2 text-xs text-[rgba(244,239,230,0.5)]">
-        {t(locale, "waPhoneHint")}
-      </p>
 
       {error ? (
         <p className="mt-4 rounded-lg border border-red-400/30 bg-red-950/70 px-3 py-2 text-sm text-red-200">
@@ -300,7 +261,7 @@ export function VetWhatsAppPanel({
         type="button"
         className="btn-primary mt-5 rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-50"
         onClick={startSend}
-        disabled={!breeders.length || sending}
+        disabled={!breeders.length || sending || used >= limit}
       >
         {sending ? t(locale, "waSending") : t(locale, "waStart")}
       </button>
@@ -313,7 +274,7 @@ export function VetWhatsAppPanel({
               className={item.ok ? "text-emerald-200" : "text-red-200"}
             >
               {item.name}
-              {item.ok ? "" : ` — ${item.error || t(locale, "waSendFailed")}`}
+              {item.ok ? "" : ` — ${resultError(item.error)}`}
             </li>
           ))}
         </ul>

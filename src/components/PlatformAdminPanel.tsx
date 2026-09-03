@@ -16,6 +16,9 @@ type VetRow = {
   isActive: boolean;
   phone: string | null;
   createdAt: string;
+  whatsappEnabled: boolean;
+  whatsappMonthlyLimit: number;
+  whatsappUsed: number;
 };
 
 export function PlatformAdminPanel() {
@@ -31,6 +34,7 @@ export function PlatformAdminPanel() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [waLimits, setWaLimits] = useState<Record<string, string>>({});
 
   useEffect(() => {
     try {
@@ -49,7 +53,13 @@ export function PlatformAdminPanel() {
         return;
       }
       const data = await res.json();
-      setVets(data.vets || []);
+      const list: VetRow[] = data.vets || [];
+      setVets(list);
+      setWaLimits(
+        Object.fromEntries(
+          list.map((vet) => [vet.id, String(vet.whatsappMonthlyLimit ?? 0)]),
+        ),
+      );
     } catch {
       setError(t(uiLocale, "loadError"));
     } finally {
@@ -273,9 +283,18 @@ export function PlatformAdminPanel() {
                 {vet.phone ? ` · ${vet.phone}` : ""}
                 {" · "}
                 {vet.isActive ? t(uiLocale, "active") : t(uiLocale, "inactive")}
+                {" · "}
+                {vet.whatsappEnabled
+                  ? t(uiLocale, "waEnabled")
+                  : t(uiLocale, "waDisabledAdmin")}
+                {" · "}
+                {t(uiLocale, "waUsageLine", {
+                  used: vet.whatsappUsed,
+                  limit: vet.whatsappMonthlyLimit,
+                })}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-end gap-2">
               <button
                 type="button"
                 className="shop-chip rounded-xl px-3 py-1.5 text-sm"
@@ -290,6 +309,52 @@ export function PlatformAdminPanel() {
                 }
               >
                 {vet.isActive ? t(uiLocale, "toggleOff") : t(uiLocale, "toggleOn")}
+              </button>
+              <button
+                type="button"
+                className="shop-chip rounded-xl px-3 py-1.5 text-sm"
+                onClick={() =>
+                  patchVet(
+                    vet.id,
+                    { whatsappEnabled: !vet.whatsappEnabled },
+                    vet.whatsappEnabled
+                      ? t(uiLocale, "waFeatureOff")
+                      : t(uiLocale, "waFeatureOn"),
+                  )
+                }
+              >
+                {vet.whatsappEnabled
+                  ? t(uiLocale, "waToggleOff")
+                  : t(uiLocale, "waToggleOn")}
+              </button>
+              <label className="text-xs">
+                {t(uiLocale, "waLimitLabel")}
+                <input
+                  className="shop-field mt-1 w-24 rounded-xl px-2 py-1.5 text-sm"
+                  inputMode="numeric"
+                  value={waLimits[vet.id] ?? ""}
+                  onChange={(e) =>
+                    setWaLimits((prev) => ({ ...prev, [vet.id]: e.target.value }))
+                  }
+                />
+              </label>
+              <button
+                type="button"
+                className="shop-chip rounded-xl px-3 py-1.5 text-sm"
+                onClick={() => {
+                  const n = Number.parseInt(waLimits[vet.id] || "0", 10);
+                  if (!Number.isFinite(n) || n < 0) {
+                    setError(t(uiLocale, "invalidData"));
+                    return;
+                  }
+                  patchVet(
+                    vet.id,
+                    { whatsappMonthlyLimit: n },
+                    t(uiLocale, "waLimitUpdated"),
+                  );
+                }}
+              >
+                {t(uiLocale, "waLimitSave")}
               </button>
               <button
                 type="button"
