@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireVetSession } from "@/lib/auth";
 import { sendWhatsAppTemplate, whatsappConfigured } from "@/lib/whatsappCloud";
-import { recordThreadMessage } from "@/lib/whatsappInbox";
 import {
   recordSuccessfulWhatsAppSend,
   whatsappQuotaFor,
@@ -114,15 +113,6 @@ export async function POST(request: Request) {
     });
     if (sent.ok) {
       await recordSuccessfulWhatsAppSend(session.vetId);
-      await recordThreadMessage({
-        veterinarianId: session.vetId,
-        breederId: breeder.id,
-        phone: breeder.phone,
-        contactName: label,
-        direction: "OUT",
-        body,
-        metaId: sent.id || null,
-      });
     }
     results.push({
       id: breeder.id,
