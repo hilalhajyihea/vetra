@@ -32,7 +32,7 @@ function templateLanguage() {
 function templateParamCount() {
   const raw = env("WHATSAPP_TEMPLATE_BODY_PARAMS");
   if (raw === "0" || raw === "1" || raw === "2") return Number(raw);
-  return templateName() === "hello_world" ? 0 : 2;
+  return templateName() === "hello_world" ? 0 : 1;
 }
 
 function sanitizeParam(value: string) {
@@ -57,7 +57,11 @@ export async function sendWhatsAppTemplate(input: {
 
   const name = templateName();
   const paramCount = templateParamCount();
-  const params = [sanitizeParam(input.name), sanitizeParam(input.body)];
+  const filled = sanitizeParam(input.body);
+  const params =
+    paramCount <= 1
+      ? [filled]
+      : [sanitizeParam(input.name), filled];
   const template: Record<string, unknown> = {
     name,
     language: { code: templateLanguage() },
