@@ -4,52 +4,33 @@ function env(name: string) {
   return process.env[name]?.trim() || "";
 }
 
-function metaToken() {
+function accessToken() {
   return env("WHATSAPP_ACCESS_TOKEN") || env("META_WHATSAPP_TOKEN");
 }
 
-function dualhookKey() {
-  return env("DUALHOOK_API_KEY");
-}
-
 function phoneNumberId() {
-  return env("WHATSAPP_PHONE_NUMBER_ID") || env("DUALHOOK_PHONE_NUMBER_ID");
-}
-
-function accessToken() {
-  return metaToken() || dualhookKey();
-}
-
-function useMetaDirect() {
-  return Boolean(metaToken());
+  return env("WHATSAPP_PHONE_NUMBER_ID");
 }
 
 function graphVersion() {
   return env("WHATSAPP_GRAPH_VERSION") || "v21.0";
 }
 
-export function dualhookConfigured() {
+export function whatsappConfigured() {
   return Boolean(accessToken() && phoneNumberId());
 }
 
 function templateName() {
-  return (
-    env("WHATSAPP_TEMPLATE_NAME") ||
-    env("DUALHOOK_TEMPLATE_NAME") ||
-    "hello_world"
-  );
+  return env("WHATSAPP_TEMPLATE_NAME") || "hello_world";
 }
 
 function templateLanguage() {
-  const explicit =
-    env("WHATSAPP_TEMPLATE_LANGUAGE") || env("DUALHOOK_TEMPLATE_LANGUAGE");
-  if (explicit) return explicit;
+  if (env("WHATSAPP_TEMPLATE_LANGUAGE")) return env("WHATSAPP_TEMPLATE_LANGUAGE");
   return templateName() === "hello_world" ? "en_US" : "he";
 }
 
 function templateParamCount() {
-  const raw =
-    env("WHATSAPP_TEMPLATE_BODY_PARAMS") || env("DUALHOOK_TEMPLATE_BODY_PARAMS");
+  const raw = env("WHATSAPP_TEMPLATE_BODY_PARAMS");
   if (raw === "0" || raw === "1" || raw === "2") return Number(raw);
   return templateName() === "hello_world" ? 0 : 2;
 }
@@ -59,14 +40,7 @@ function sanitizeParam(value: string) {
   return (cleaned || "-").slice(0, 1024);
 }
 
-function messagesUrl(phoneId: string) {
-  if (useMetaDirect()) {
-    return `https://graph.facebook.com/${graphVersion()}/${phoneId}/messages`;
-  }
-  return `https://api.dualhook.com/v25.0/${phoneId}/messages`;
-}
-
-export async function sendDualhookTemplate(input: {
+export async function sendWhatsAppTemplate(input: {
   to: string;
   name: string;
   body: string;
@@ -100,19 +74,22 @@ export async function sendDualhookTemplate(input: {
     ];
   }
 
-  const res = await fetch(messagesUrl(phoneId), {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+  const res = await fetch(
+    `https://graph.facebook.com/${graphVersion()}/${phoneId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: digits,
+        type: "template",
+        template,
+      }),
     },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to: digits,
-      type: "template",
-      template,
-    }),
-  });
+  );
 
   const data = (await res.json().catch(() => ({}))) as {
     error?: {

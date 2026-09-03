@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireVetSession } from "@/lib/auth";
-import { dualhookConfigured, sendDualhookTemplate } from "@/lib/dualhook";
+import { sendWhatsAppTemplate, whatsappConfigured } from "@/lib/whatsappCloud";
 import { fillWhatsAppTemplate } from "@/lib/whatsapp";
 import { prisma } from "@/lib/prisma";
 
@@ -12,7 +12,7 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
   }
-  return NextResponse.json({ configured: dualhookConfigured() });
+  return NextResponse.json({ configured: whatsappConfigured() });
 }
 
 const postSchema = z.object({
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   if (!session) {
     return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
   }
-  if (!dualhookConfigured()) {
+  if (!whatsappConfigured()) {
     return NextResponse.json({ error: "NOT_CONFIGURED" }, { status: 503 });
   }
 
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       farm,
       clinic,
     });
-    const sent = await sendDualhookTemplate({
+    const sent = await sendWhatsAppTemplate({
       to: phone,
       name,
       body,

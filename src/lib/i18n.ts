@@ -353,7 +353,7 @@ const he = {
     "בחרו מגדלים, נסחו הודעה, ושלחו מהאתר. כל מגדל מקבל הודעה נפרדת. אפשר לכתוב {שם} {חווה} {קליניקה}.",
   waPhoneLabel: "מספר לבדיקה",
   waPhoneHint:
-    "שמרו כאן את הנייד שלכם להודעת ניסיון. השידור למגדלים יוצא מזהות הקליניקה ב־Dualhook.",
+    "שמרו כאן את הנייד שלכם להודעת ניסיון. השידור למגדלים יוצא ממספר הוואטסאפ העסקי של הקליניקה.",
   waPhoneSave: "שמירת מספר",
   waPhoneSaved: "המספר נשמר",
   waPlaceholders:
@@ -372,7 +372,7 @@ const he = {
   waSending: "שולח...",
   waSendResult: "נשלחו {ok} מתוך {total}",
   waSendFailed: "השליחה נכשלה",
-  waNotConfigured: "שליחה מהאתר לא הוגדרה. בדקו את משתני Dualhook בשרת.",
+  waNotConfigured: "שליחה מהאתר לא הוגדרה. בדקו את משתני הוואטסאפ בשרת.",
   waProgress: "{current} מתוך {total} — {name}",
   waOpenChat: "שלח בוואטסאפ",
   waNext: "הבא",
@@ -381,7 +381,7 @@ const he = {
   waCancelQueue: "ביטול",
   waTest: "בדיקה אליי",
   waTestNeedPhone: "שמרו מספר עסקי כדי לבדוק",
-  waFromHint: "שולחים ממספר {phone}. ודאו ש־WhatsApp מחובר אליו.",
+  waFromHint: "שולחים ממספר הוואטסאפ העסקי המחובר לשרת. מספר הבדיקה שלכם: {phone}.",
   waFromMissing:
     "לא נשמר מספר עסקי. השליחה תצא מהחשבון שמחובר עכשיו ב־WhatsApp.",
   waInvalidPhone: "למגדל זה אין מספר תקין",
@@ -734,7 +734,7 @@ const ar: { [K in keyof typeof he]: string } = {
     "اختاروا مربّين، اكتبوا النص، وأرسلوا من الموقع. كل مربّي يستلم رسالة منفصلة. يمكن كتابة {שם} {חווה} {קליניקה}.",
   waPhoneLabel: "رقم للتجربة",
   waPhoneHint:
-    "احفظوا هنا جوّالكم لرسالة تجريبية. الإرسال للمربّين يخرج من هوية العيادة عبر Dualhook.",
+    "احفظوا هنا جوّالكم لرسالة تجريبية. الإرسال للمربّين يخرج من رقم واتساب التجاري للعيادة.",
   waPhoneSave: "حفظ الرقم",
   waPhoneSaved: "تم حفظ الرقم",
   waPlaceholders:
@@ -753,7 +753,7 @@ const ar: { [K in keyof typeof he]: string } = {
   waSending: "جاري الإرسال...",
   waSendResult: "أُرسل {ok} من {total}",
   waSendFailed: "فشل الإرسال",
-  waNotConfigured: "الإرسال من الموقع غير معدّ. تحققوا من متغيرات Dualhook على الخادم.",
+  waNotConfigured: "الإرسال من الموقع غير معدّ. تحققوا من متغيرات واتساب على الخادم.",
   waProgress: "{current} من {total} — {name}",
   waOpenChat: "إرسال عبر واتساب",
   waNext: "التالي",
@@ -762,7 +762,7 @@ const ar: { [K in keyof typeof he]: string } = {
   waCancelQueue: "إلغاء",
   waTest: "تجربة لي",
   waTestNeedPhone: "احفظوا رقمًا تجاريًا للتجربة",
-  waFromHint: "الإرسال من {phone}. تأكدوا أن واتساب متصل بهذا الرقم.",
+  waFromHint: "الإرسال من رقم واتساب التجاري المتصل بالخادم. رقم التجربة لديكم: {phone}.",
   waFromMissing:
     "لم يُحفظ رقم تجاري. ستخرج الرسالة من الحساب المتصل الآن في واتساب.",
   waInvalidPhone: "لا يوجد رقم صالح لهذا المربّي",
