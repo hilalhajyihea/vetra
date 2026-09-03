@@ -1,4 +1,4 @@
-import { toWhatsAppDigits } from "@/lib/phone";
+import { toCloudRecipient, toWhatsAppDigits } from "@/lib/phone";
 
 function env(name: string) {
   return process.env[name]?.trim() || "";
@@ -91,6 +91,62 @@ export async function sendWhatsAppTemplate(input: {
         to: digits,
         type: "template",
         template,
+      }),
+    },
+  );
+
+  const data = (await res.json().catch(() => ({}))) as {
+    error?: {
+      message?: string;
+      error_user_msg?: string;
+      code?: number;
+    };
+    messages?: Array<{ id?: string }>;
+  };
+
+  if (!res.ok) {
+    const detail =
+      data.error?.error_user_msg ||
+      data.error?.message ||
+      `HTTP_${res.status}`;
+    const code = data.error?.code;
+    return {
+      ok: false as const,
+      error: code ? `(#${code}) ${detail}` : detail,
+    };
+  }
+
+  return { ok: true as const, id: data.messages?.[0]?.id || "" };
+}
+
+export async function sendWhatsAppText(input: { to: string; body: string }) {
+  const token = accessToken();
+  const phoneId = phoneNumberId();
+  const digits = toCloudRecipient(input.to);
+  if (!token || !phoneId) {
+    return { ok: false as const, error: "NOT_CONFIGURED" };
+  }
+  if (!digits) {
+    return { ok: false as const, error: "PHONE_INVALID" };
+  }
+  const text = input.body.replace(/[ \t]+\n/g, "\n").trim().slice(0, 4096);
+  if (!text) {
+    return { ok: false as const, error: "EMPTY" };
+  }
+
+  const res = await fetch(
+    `https://graph.facebook.com/${graphVersion()}/${phoneId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: digits,
+        type: "text",
+        text: { body: text },
       }),
     },
   );

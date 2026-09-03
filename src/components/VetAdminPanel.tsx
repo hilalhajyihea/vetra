@@ -7,6 +7,7 @@ import { BrandMark } from "@/components/BrandGraphics";
 import { VaccineCatalogEditor } from "@/components/VaccineCatalogEditor";
 import { VetBookingPanel } from "@/components/VetBookingPanel";
 import { VetVaccineApprovals } from "@/components/VetVaccineApprovals";
+import { VetWhatsAppInbox } from "@/components/VetWhatsAppInbox";
 import { VetWhatsAppPanel } from "@/components/VetWhatsAppPanel";
 import { t, type Locale } from "@/lib/i18n";
 
@@ -128,6 +129,8 @@ export function VetAdminPanel({
       <VaccineCatalogEditor locale={locale} />
 
       <VetVaccineApprovals locale={locale} />
+
+      <VetWhatsAppInbox locale={locale} />
 
       <VetWhatsAppPanel
         locale={locale}

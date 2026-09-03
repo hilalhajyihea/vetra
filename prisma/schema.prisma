@@ -27,10 +27,11 @@ model Veterinarian {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  breeders       Breeder[]
-  vaccineTypes   VaccineType[]
-  bookingWindows BookingWindow[]
-  appointments   Appointment[]
+  breeders         Breeder[]
+  vaccineTypes     VaccineType[]
+  bookingWindows   BookingWindow[]
+  appointments     Appointment[]
+  whatsappThreads  WhatsAppThread[]
 }
 
 model Breeder {
@@ -49,10 +50,11 @@ model Breeder {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  veterinarian Veterinarian @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
-  groups       AnimalGroup[]
-  animals      Animal[]
-  appointments Appointment[]
+  veterinarian     Veterinarian      @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
+  groups           AnimalGroup[]
+  animals          Animal[]
+  appointments     Appointment[]
+  whatsappThreads  WhatsAppThread[]
 
   @@unique([veterinarianId, phone])
   @@index([veterinarianId, status])
@@ -168,4 +170,40 @@ model Appointment {
   @@index([breederId])
   @@index([veterinarianId, date])
   @@index([veterinarianId, date, startMin])
+}
+
+model WhatsAppThread {
+  id             String    @id @default(cuid())
+  veterinarianId String
+  breederId      String?
+  phone          String
+  contactName    String    @default("")
+  lastMessageAt  DateTime  @default(now())
+  lastInboundAt  DateTime?
+  lastPreview    String    @default("")
+  unreadCount    Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  veterinarian Veterinarian      @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
+  breeder      Breeder?          @relation(fields: [breederId], references: [id], onDelete: SetNull)
+  messages     WhatsAppMessage[]
+
+  @@unique([veterinarianId, phone])
+  @@index([veterinarianId, lastMessageAt])
+}
+
+model WhatsAppMessage {
+  id        String   @id @default(cuid())
+  threadId  String
+  /// IN | OUT
+  direction String
+  body      String
+  metaId    String?
+  createdAt DateTime @default(now())
+
+  thread WhatsAppThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+  @@index([metaId])
 }

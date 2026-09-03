@@ -407,6 +407,19 @@ const he = {
   waFromMissing:
     "לא נשמר מספר עסקי. השליחה תצא מהחשבון שמחובר עכשיו ב־WhatsApp.",
   waInvalidPhone: "למגדל זה אין מספר תקין",
+  inboxTitle: "תיבת וואטסאפ",
+  inboxLead:
+    "כאן רואים תשובות של מגדלים ועונים מהאתר. תשובה בטקסט חופשי אפשרית עד 24 שעות מההודעה האחרונה שלהם.",
+  inboxEmpty: "אין שיחות עדיין",
+  inboxPick: "בחרו שיחה מהרשימה",
+  inboxReply: "כתבו תשובה",
+  inboxSend: "שלח",
+  inboxSending: "שולח...",
+  inboxNeedText: "כתבו תשובה",
+  inboxWindowClosed:
+    "חלון 24 השעות נסגר. כדי לפתוח שיחה מחדש שלחו הודעה מהשידור למגדלים.",
+  inboxYou: "אתם",
+  inboxThem: "הם",
 } as const;
 
 const ar: { [K in keyof typeof he]: string } = {
@@ -810,6 +823,19 @@ const ar: { [K in keyof typeof he]: string } = {
   waFromMissing:
     "لم يُحفظ رقم تجاري. ستخرج الرسالة من الحساب المتصل الآن في واتساب.",
   waInvalidPhone: "لا يوجد رقم صالح لهذا المربّي",
+  inboxTitle: "صندوق واتساب",
+  inboxLead:
+    "هنا تظهر ردود المربّين ويمكن الرد من الموقع. الرد بنص حر ممكن حتى 24 ساعة من آخر رسالة لديهم.",
+  inboxEmpty: "لا محادثات بعد",
+  inboxPick: "اختاروا محادثة من القائمة",
+  inboxReply: "اكتبوا ردًا",
+  inboxSend: "إرسال",
+  inboxSending: "جاري الإرسال...",
+  inboxNeedText: "اكتبوا ردًا",
+  inboxWindowClosed:
+    "أُغلق نافذة الـ 24 ساعة. لفتح المحادثة من جديد أرسلوا رسالة من بثّ المربّين.",
+  inboxYou: "أنتم",
+  inboxThem: "هم",
 };
 
 const dict = { he, ar } as const;
