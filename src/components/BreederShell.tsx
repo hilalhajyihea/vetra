@@ -43,12 +43,12 @@ export function BreederShell({
   const router = useRouter();
   const base = basePath || `/${slug}/breeder`;
   const fullName = `${firstName} ${lastName}`.trim();
-  const nameMatches =
-    typedName.replace(/\s+/g, " ").trim() === fullName.replace(/\s+/g, " ").trim();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [typedName, setTypedName] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const nameMatches =
+    typedName.replace(/\s+/g, " ").trim() === fullName.replace(/\s+/g, " ").trim();
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
