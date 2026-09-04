@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { formatAge, formatIsraelDate, isVaccineValid } from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
 
@@ -52,7 +53,8 @@ function withFarm(path: string, farmId?: string) {
   return `${path}${join}farmId=${encodeURIComponent(farmId)}`;
 }
 
-export function HerdManager({ locale, farmId }: Props) {
+export function HerdManager({ locale: localeProp, farmId }: Props) {
+  const locale = useUiLocale(localeProp);
   const router = useRouter();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);

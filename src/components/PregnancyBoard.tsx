@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { t, type Locale } from "@/lib/i18n";
 
 type BreedingMethod = "" | "SPONGE" | "HORMONE" | "AI";
@@ -45,7 +46,8 @@ function cardClass(pregnant: boolean) {
     : "border-white/15 bg-black/20 text-[rgba(244,239,230,0.88)]";
 }
 
-export function PregnancyBoard({ locale, farmId }: Props) {
+export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
+  const locale = useUiLocale(localeProp);
   const router = useRouter();
   const [groups, setGroups] = useState<GroupRow[]>([]);
   const [loading, setLoading] = useState(true);

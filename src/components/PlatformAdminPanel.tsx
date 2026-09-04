@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandGraphics";
 import { LanguageToggle } from "@/components/LanguageToggle";
-import { LOCALE_STORAGE_KEY, normalizeLocale, t, type Locale } from "@/lib/i18n";
+import { useUiLocale } from "@/components/LocaleProvider";
+import { t } from "@/lib/i18n";
 
 type VetRow = {
   id: string;
@@ -23,7 +24,7 @@ type VetRow = {
 
 export function PlatformAdminPanel() {
   const router = useRouter();
-  const [uiLocale, setUiLocale] = useState<Locale>("he");
+  const uiLocale = useUiLocale("he");
   const [vets, setVets] = useState<VetRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -35,14 +36,6 @@ export function PlatformAdminPanel() {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [waLimits, setWaLimits] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    try {
-      setUiLocale(normalizeLocale(localStorage.getItem(LOCALE_STORAGE_KEY)));
-    } catch {
-      /* ignore */
-    }
-  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -164,7 +157,7 @@ export function PlatformAdminPanel() {
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <BrandMark tone="light" />
         <div className="flex flex-wrap items-center gap-2">
-          <LanguageToggle locale={uiLocale} onChange={setUiLocale} />
+          <LanguageToggle />
           <Link
             href="/"
             className="rounded-xl border border-white/20 px-4 py-2 text-sm transition hover:bg-white/10"

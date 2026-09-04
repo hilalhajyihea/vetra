@@ -3,6 +3,8 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { BrandMark } from "@/components/BrandGraphics";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { t, type Locale } from "@/lib/i18n";
 
 type Props = {
@@ -11,7 +13,8 @@ type Props = {
   locale: Locale;
 };
 
-export function BreederRegisterForm({ slug, clinicLabel, locale }: Props) {
+export function BreederRegisterForm({ slug, clinicLabel, locale: localeProp }: Props) {
+  const locale = useUiLocale(localeProp);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [farmName, setFarmName] = useState("");
@@ -57,8 +60,11 @@ export function BreederRegisterForm({ slug, clinicLabel, locale }: Props) {
     <main
       lang={locale}
       dir="rtl"
-      className="shop-shell flex flex-1 items-center justify-center px-4 py-12"
+      className="shop-shell flex flex-1 flex-col items-center justify-center px-4 py-12"
     >
+      <div className="mb-4 flex w-full max-w-md justify-end">
+        <LanguageToggle fallback={localeProp} />
+      </div>
       <div className="surface-dark w-full max-w-md rounded-2xl p-6 sm:p-8">
         <BrandMark tone="light" className="mb-6" />
         <h1 className="font-display text-3xl text-[var(--cream)]">

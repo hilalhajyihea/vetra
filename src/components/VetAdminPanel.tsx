@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandGraphics";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { VaccineCatalogEditor } from "@/components/VaccineCatalogEditor";
 import { VetBookingPanel } from "@/components/VetBookingPanel";
 import { VetVaccineApprovals } from "@/components/VetVaccineApprovals";
@@ -31,8 +33,9 @@ export function VetAdminPanel({
   slug,
   displayName,
   clinicName,
-  locale,
+  locale: localeProp,
 }: Props) {
+  const locale = useUiLocale(localeProp);
   const router = useRouter();
   const [breeders, setBreeders] = useState<BreederRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,7 +92,8 @@ export function VetAdminPanel({
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6" lang={locale} dir="rtl">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <BrandMark tone="light" />
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <LanguageToggle fallback={localeProp} />
           <Link
             href={`/${slug}`}
             className="rounded-xl border border-white/20 px-4 py-2 text-sm"

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BrandMark, CheckIcon, WhatsAppIcon } from "@/components/BrandGraphics";
 import { LanguageToggle } from "@/components/LanguageToggle";
-import { LOCALE_STORAGE_KEY, normalizeLocale, t, type Locale } from "@/lib/i18n";
+import { useUiLocale } from "@/components/LocaleProvider";
+import { t } from "@/lib/i18n";
 import {
   SITE_ADMIN_EMAIL,
   SITE_ADMIN_PHONE,
@@ -41,15 +41,7 @@ const plans = [
 ] as const;
 
 export function HomePage() {
-  const [locale, setLocale] = useState<Locale>("he");
-
-  useEffect(() => {
-    try {
-      setLocale(normalizeLocale(localStorage.getItem(LOCALE_STORAGE_KEY)));
-    } catch {
-      /* ignore */
-    }
-  }, []);
+  const locale = useUiLocale("he");
 
   return (
     <main lang={locale} dir="rtl" className="shop-shell relative flex flex-1 flex-col">
@@ -58,7 +50,7 @@ export function HomePage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <BrandMark tone="light" />
             <nav className="flex flex-wrap items-center gap-2 text-sm font-semibold">
-              <LanguageToggle locale={locale} onChange={setLocale} />
+              <LanguageToggle />
               <a
                 href="#pricing"
                 className="rounded-xl border border-white/25 bg-black/25 px-4 py-2 text-[var(--cream)] backdrop-blur-sm transition hover:bg-black/40"

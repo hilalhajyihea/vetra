@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Frank_Ruhl_Libre, Rubik } from "next/font/google";
+import { Providers } from "@/components/Providers";
 import { homeMetadata } from "@/lib/seo";
 import "./globals.css";
 
@@ -31,7 +32,9 @@ export default function RootLayout({
       dir="rtl"
       className={`${rubik.variable} ${frank.variable} h-full`}
     >
-      <body className="flex min-h-full flex-col antialiased">{children}</body>
+      <body className="flex min-h-full flex-col antialiased">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

@@ -4,6 +4,8 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandGraphics";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { t, type Locale } from "@/lib/i18n";
 
 type Props = {
@@ -13,7 +15,8 @@ type Props = {
   locale: Locale;
 };
 
-export function ClinicHome({ slug, displayName, clinicName, locale }: Props) {
+export function ClinicHome({ slug, displayName, clinicName, locale: localeProp }: Props) {
+  const locale = useUiLocale(localeProp);
   const router = useRouter();
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -50,6 +53,9 @@ export function ClinicHome({ slug, displayName, clinicName, locale }: Props) {
       dir="rtl"
       className="shop-shell flex flex-1 flex-col items-center justify-center px-4 py-12"
     >
+      <div className="mb-4 flex w-full max-w-md justify-end">
+        <LanguageToggle fallback={localeProp} />
+      </div>
       <form
         onSubmit={onSubmit}
         className="surface-dark w-full max-w-md rounded-2xl p-6 sm:p-8"

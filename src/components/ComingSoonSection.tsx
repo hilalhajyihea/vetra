@@ -1,12 +1,16 @@
+"use client";
+
+import { useUiLocale } from "@/components/LocaleProvider";
 import { t, type Locale, type MsgKey } from "@/lib/i18n";
 
 export function ComingSoonSection({
-  locale,
+  locale: localeProp,
   titleKey,
 }: {
   locale: Locale;
   titleKey: MsgKey;
 }) {
+  const locale = useUiLocale(localeProp);
   return (
     <div>
       <h1 className="font-display text-3xl text-[var(--cream)]">

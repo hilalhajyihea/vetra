@@ -1,22 +1,15 @@
 "use client";
 
-import { LOCALE_STORAGE_KEY, type Locale } from "@/lib/i18n";
+import { useLocaleControls } from "@/components/LocaleProvider";
+import type { Locale } from "@/lib/i18n";
 
 type Props = {
-  locale: Locale;
-  onChange: (locale: Locale) => void;
+  fallback?: Locale;
   className?: string;
 };
 
-export function LanguageToggle({ locale, onChange, className = "" }: Props) {
-  function setLocale(next: Locale) {
-    onChange(next);
-    try {
-      localStorage.setItem(LOCALE_STORAGE_KEY, next);
-    } catch {
-      /* ignore */
-    }
-  }
+export function LanguageToggle({ fallback = "he", className = "" }: Props) {
+  const { locale, setLocale } = useLocaleControls(fallback);
 
   return (
     <div

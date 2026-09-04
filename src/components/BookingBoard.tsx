@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { formatClock, rollingMonths } from "@/lib/booking";
 import { formatIsraelDate, jerusalemTodayKey } from "@/lib/herd";
 import { t, type Locale, type MsgKey } from "@/lib/i18n";
@@ -54,7 +55,8 @@ function dateKey(year: number, month: number, day: number) {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-export function BookingBoard({ locale, farmId }: Props) {
+export function BookingBoard({ locale: localeProp, farmId }: Props) {
+  const locale = useUiLocale(localeProp);
   const router = useRouter();
   const today = jerusalemTodayKey();
   const months = useMemo(() => rollingMonths(3), []);

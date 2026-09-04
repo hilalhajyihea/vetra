@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { BrandMark } from "@/components/BrandGraphics";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { t, type Locale } from "@/lib/i18n";
 
 type Props = {
@@ -13,14 +17,18 @@ export function VetComingSoon({
   slug,
   displayName,
   clinicName,
-  locale,
+  locale: localeProp,
 }: Props) {
+  const locale = useUiLocale(localeProp);
   return (
     <main
       lang={locale}
       dir="rtl"
       className="shop-shell flex flex-1 flex-col items-center justify-center px-6 py-16"
     >
+      <div className="mb-4">
+        <LanguageToggle fallback={localeProp} />
+      </div>
       <div className="surface-dark w-full max-w-lg rounded-2xl p-8 text-center">
         <BrandMark tone="light" className="justify-center" />
         <p className="mt-6 text-xs font-semibold tracking-[0.24em] text-[var(--hay)]">

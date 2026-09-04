@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { formatClock } from "@/lib/booking";
 import { formatIsraelDate, jerusalemTodayKey } from "@/lib/herd";
 import { t, type Locale, type MsgKey } from "@/lib/i18n";
@@ -102,7 +103,8 @@ function dateKey(year: number, month: number, day: number) {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-export function FarmCalendar({ locale, farmId }: Props) {
+export function FarmCalendar({ locale: localeProp, farmId }: Props) {
+  const locale = useUiLocale(localeProp);
   const router = useRouter();
   const today = jerusalemTodayKey();
   const currentYear = Number(today.slice(0, 4));

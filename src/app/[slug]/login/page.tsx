@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LoginForm } from "@/components/LoginForm";
 import { getSession } from "@/lib/auth";
@@ -40,17 +39,14 @@ export default async function VetLoginPage({ params }: Props) {
     >
       <LoginForm
         endpoint="/api/auth/vet/login"
-        title={t(locale, "loginTitle")}
-        subtitle={t(locale, "loginSubtitle", { name: vet.displayName })}
+        titleKey="loginTitle"
+        subtitleKey="loginSubtitle"
+        subtitleVars={{ name: vet.displayName }}
         redirectTo={`/${slug}/admin`}
         locale={locale}
+        backHref={`/${slug}`}
+        backKey="backToVetHome"
       />
-      <Link
-        href={`/${slug}`}
-        className="rounded-xl border border-white/20 px-4 py-2 text-sm text-[var(--cream)] transition hover:bg-white/10"
-      >
-        {t(locale, "backToVetHome")}
-      </Link>
     </main>
   );
 }

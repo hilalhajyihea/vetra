@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { clockOptions, formatClock } from "@/lib/booking";
 import { formatIsraelDate } from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
@@ -26,7 +27,8 @@ type AppointmentRow = {
   };
 };
 
-export function VetBookingPanel({ locale }: { locale: Locale }) {
+export function VetBookingPanel({ locale: localeProp }: { locale: Locale }) {
+  const locale = useUiLocale(localeProp);
   const clocks = clockOptions();
   const [windows, setWindows] = useState<WindowRow[]>([]);
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { t, type Locale } from "@/lib/i18n";
 
 type Vaccine = {
@@ -10,7 +11,8 @@ type Vaccine = {
   validMonths: number;
 };
 
-export function VaccineCatalogEditor({ locale }: { locale: Locale }) {
+export function VaccineCatalogEditor({ locale: localeProp }: { locale: Locale }) {
+  const locale = useUiLocale(localeProp);
   const [vaccines, setVaccines] = useState<Vaccine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { formatIsraelDate } from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
 
@@ -59,7 +60,8 @@ function groupPending(records: PendingVaccine[]): FarmGroup[] {
   return Array.from(farms.values());
 }
 
-export function VetVaccineApprovals({ locale }: { locale: Locale }) {
+export function VetVaccineApprovals({ locale: localeProp }: { locale: Locale }) {
+  const locale = useUiLocale(localeProp);
   const [records, setRecords] = useState<PendingVaccine[]>([]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");

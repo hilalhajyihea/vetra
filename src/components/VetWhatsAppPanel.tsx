@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { t, type Locale } from "@/lib/i18n";
 import { fillWhatsAppTemplate, insertPlaceholder } from "@/lib/whatsapp";
 
@@ -27,11 +28,12 @@ type Props = {
 };
 
 export function VetWhatsAppPanel({
-  locale,
+  locale: localeProp,
   clinicName,
   displayName,
   breeders,
 }: Props) {
+  const locale = useUiLocale(localeProp);
   const clinic = clinicName || displayName;
   const [text, setText] = useState(() => t(locale, "waDefaultText"));
   const [selected, setSelected] = useState<Record<string, boolean>>({});

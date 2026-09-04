@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { t, type Locale } from "@/lib/i18n";
 
 type Thread = {
@@ -35,7 +36,8 @@ function formatWhen(locale: Locale, iso: string) {
   });
 }
 
-export function VetWhatsAppInbox({ locale }: Props) {
+export function VetWhatsAppInbox({ locale: localeProp }: Props) {
+  const locale = useUiLocale(localeProp);
   const [enabled, setEnabled] = useState(false);
   const [ready, setReady] = useState(false);
   const [threads, setThreads] = useState<Thread[]>([]);

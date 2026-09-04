@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { BrandMark } from "@/components/BrandGraphics";
 import { t, type Locale, type MsgKey } from "@/lib/i18n";
 
@@ -29,7 +31,7 @@ type Props = {
 
 export function BreederShell({
   slug,
-  locale,
+  locale: localeProp,
   firstName,
   lastName,
   farmName,
@@ -39,6 +41,7 @@ export function BreederShell({
   viewer = "breeder",
   breederId,
 }: Props) {
+  const locale = useUiLocale(localeProp);
   const pathname = usePathname();
   const router = useRouter();
   const base = basePath || `/${slug}/breeder`;
@@ -95,7 +98,8 @@ export function BreederShell({
             <span className="mr-2 text-[rgba(244,239,230,0.55)]">· {farmName}</span>
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <LanguageToggle fallback={localeProp} />
           {viewer === "vet" ? (
             <Link
               href={`/${slug}/admin`}

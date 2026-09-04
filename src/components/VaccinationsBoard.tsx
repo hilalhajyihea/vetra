@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUiLocale } from "@/components/LocaleProvider";
 import { formatIsraelDate } from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
 
@@ -55,7 +56,8 @@ function statusClass(status: VaccineStatus | boolean) {
     : "border-red-500/40 bg-red-950/70 text-red-100";
 }
 
-export function VaccinationsBoard({ locale, farmId }: Props) {
+export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
+  const locale = useUiLocale(localeProp);
   const router = useRouter();
   const [vaccines, setVaccines] = useState<VaccineCard[]>([]);
   const [loading, setLoading] = useState(true);
