@@ -28,6 +28,12 @@ type Group = {
   animals: Animal[];
 };
 
+type AnimalRow = Animal & { groupId: string; groupName: string };
+
+function compareAnimalNumber(a: string, b: string) {
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+}
+
 type VaccineType = {
   id: string;
   name: string;
@@ -91,16 +97,27 @@ export function HerdManager({ locale, farmId }: Props) {
     load();
   }, [load]);
 
-  const filtered = useMemo(() => {
+  const allAnimals = useMemo(() => {
+    const rows: AnimalRow[] = [];
+    for (const group of groups) {
+      for (const animal of group.animals) {
+        rows.push({ ...animal, groupId: group.id, groupName: group.name });
+      }
+    }
+    rows.sort((a, b) => compareAnimalNumber(a.number, b.number));
+    return rows;
+  }, [groups]);
+
+  const filteredAnimals = useMemo(() => {
     const q = search.trim();
-    if (!q) return groups;
-    return groups
-      .map((g) => ({
-        ...g,
-        animals: g.animals.filter((a) => a.number.trim() === q),
-      }))
-      .filter((g) => g.animals.length > 0);
-  }, [groups, search]);
+    if (!q) return allAnimals;
+    return allAnimals.filter((animal) => animal.number.includes(q));
+  }, [allAnimals, search]);
+
+  const emptyGroups = useMemo(
+    () => groups.filter((group) => group.animals.length === 0),
+    [groups],
+  );
 
   async function addGroup(e: FormEvent) {
     e.preventDefault();
@@ -274,13 +291,6 @@ export function HerdManager({ locale, farmId }: Props) {
         {t(locale, "herdTitle")}
       </h1>
 
-      <input
-        className="shop-field mt-5 w-full max-w-md rounded-xl px-3 py-2.5"
-        placeholder={t(locale, "searchNumber")}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <form onSubmit={addGroup} className="surface-dark rounded-2xl p-4">
           <h2 className="font-semibold">{t(locale, "addGroup")}</h2>
@@ -369,222 +379,273 @@ export function HerdManager({ locale, farmId }: Props) {
         </p>
       ) : null}
 
-      <div className="mt-8 space-y-4">
+      <div className="mt-8">
         {loading ? <p>{t(locale, "loading")}</p> : null}
         {!loading && groups.length === 0 ? (
           <p className="text-sm text-[rgba(244,239,230,0.62)]">
             {t(locale, "noGroups")}
           </p>
         ) : null}
-        {!loading && search.trim() && filtered.length === 0 ? (
-          <p className="text-sm text-[rgba(244,239,230,0.62)]">
-            {t(locale, "noSearchResults")}
-          </p>
-        ) : null}
 
-        {filtered.map((group) => (
-          <section key={group.id} className="surface-dark rounded-2xl p-5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h2 className="font-display text-2xl text-[var(--cream)]">
-                  {group.name}
-                </h2>
-                <p className="text-sm text-[rgba(244,239,230,0.55)]">
-                  {t(locale, "groupCount", { count: group.animals.length })}
-                </p>
-              </div>
-              {group.animals.length === 0 ? (
-                <button
-                  type="button"
-                  onClick={() => deleteGroup(group)}
-                  className="rounded-xl border border-red-400/30 px-3 py-1.5 text-sm text-red-200"
-                >
-                  {t(locale, "deleteGroup")}
-                </button>
-              ) : null}
+        {!loading && groups.length > 0 ? (
+          <section className="surface-dark overflow-hidden rounded-2xl">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+              <p className="text-sm text-[rgba(244,239,230,0.7)]">
+                {t(locale, "herdAllCount", { count: allAnimals.length })}
+              </p>
+              <input
+                className="shop-field w-full max-w-xs rounded-xl px-3 py-2 text-sm"
+                placeholder={t(locale, "searchNumber")}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
-            {group.animals.length === 0 ? (
-              <p className="mt-3 text-sm text-[rgba(244,239,230,0.62)]">
-                {t(locale, "noAnimals")}
+            {filteredAnimals.length === 0 ? (
+              <p className="px-4 py-6 text-sm text-[rgba(244,239,230,0.62)]">
+                {search.trim()
+                  ? t(locale, "noSearchResults")
+                  : t(locale, "noAnimals")}
               </p>
             ) : (
-              <ul className="mt-4 space-y-3">
-                {group.animals.map((animal) => (
-                  <li
-                    key={animal.id}
-                    className="rounded-xl border border-white/10 bg-black/20 p-4"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-lg font-semibold">
-                          {t(locale, "animalNumber")} {animal.number}
-                        </p>
-                        <p className="mt-1 text-sm text-[rgba(244,239,230,0.7)]">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[56rem] text-right text-sm">
+                  <thead className="bg-black/30 text-[rgba(244,239,230,0.7)]">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">
+                        {t(locale, "animalNumber")}
+                      </th>
+                      <th className="px-3 py-2 font-semibold">
+                        {t(locale, "groupName")}
+                      </th>
+                      <th className="px-3 py-2 font-semibold">
+                        {t(locale, "sex")}
+                      </th>
+                      <th className="px-3 py-2 font-semibold">
+                        {t(locale, "age")}
+                      </th>
+                      <th className="px-3 py-2 font-semibold">
+                        {t(locale, "birthDate")}
+                      </th>
+                      <th className="px-3 py-2 font-semibold">
+                        {t(locale, "pregnant")}
+                      </th>
+                      <th className="px-3 py-2 font-semibold">
+                        {t(locale, "vaccines")}
+                      </th>
+                      <th className="px-3 py-2 font-semibold" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAnimals.map((animal) => (
+                      <tr
+                        key={animal.id}
+                        className="border-t border-white/10 align-top even:bg-black/15"
+                      >
+                        <td className="px-3 py-3 text-base font-semibold">
+                          {animal.number}
+                        </td>
+                        <td className="px-3 py-3">{animal.groupName}</td>
+                        <td className="px-3 py-3">
                           {animal.sex === "FEMALE"
                             ? t(locale, "sexFemale")
                             : t(locale, "sexMale")}
-                          {" · "}
-                          {t(locale, "age")}: {formatAge(locale, animal.birthDate)}
-                        </p>
-                        {animal.sex === "FEMALE" ? (
-                          <label className="mt-2 flex items-center gap-2 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={animal.pregnant}
-                              onChange={(e) =>
-                                togglePregnant(animal, e.target.checked)
-                              }
-                            />
-                            {t(locale, "pregnant")}
-                          </label>
-                        ) : null}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => deleteAnimal(animal)}
-                        className="rounded-xl border border-red-400/30 px-3 py-1.5 text-sm text-red-200"
-                      >
-                        {t(locale, "deleteAnimal")}
-                      </button>
-                    </div>
-
-                    <div className="mt-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-sm font-semibold">{t(locale, "vaccines")}</p>
-                        {farmId &&
-                        animal.vaccinations.some((v) => v.status === "PENDING") ? (
-                          <button
-                            type="button"
-                            className="rounded-lg border border-[var(--hay)]/40 px-2.5 py-1 text-xs font-semibold text-[var(--hay)]"
-                            onClick={() => approveVaccines({ animalId: animal.id })}
-                          >
-                            {t(locale, "vaccineApproveAnimal")}
-                          </button>
-                        ) : null}
-                      </div>
-                      <ul className="mt-2 flex flex-wrap gap-2">
-                        {animal.vaccinations.map((v) => {
-                          const pending = v.status === "PENDING";
-                          const valid = isVaccineValid(v.validUntil);
-                          return (
-                            <li
-                              key={v.id}
-                              className={`flex flex-wrap items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${
-                                pending
-                                  ? "bg-amber-900/70 text-[var(--hay)]"
-                                  : valid
-                                    ? "bg-emerald-900/70 text-emerald-200"
-                                    : "bg-red-900/70 text-red-200"
-                              }`}
-                            >
-                              <span>
-                                {v.name}
-                                {v.givenAt ? (
-                                  <>
-                                    {" · "}
-                                    {t(locale, "vaccineGiven")}:{" "}
-                                    {formatIsraelDate(v.givenAt)}
-                                  </>
-                                ) : null}
-                                {" · "}
-                                {t(locale, "vaccineUntil")}:{" "}
-                                {formatIsraelDate(v.validUntil)}
-                                {" · "}
-                                {pending
-                                  ? t(locale, "vaccinePending")
-                                  : `${t(locale, "vaccineApproved")} · ${
-                                      valid
-                                        ? t(locale, "vaccineValid")
-                                        : t(locale, "vaccineExpired")
-                                    }`}
-                              </span>
-                              {farmId && pending ? (
-                                <button
-                                  type="button"
-                                  onClick={() => approveVaccines({ id: v.id })}
-                                  className="rounded-md border border-[var(--hay)]/50 px-1.5 py-0.5 text-[11px]"
-                                >
-                                  {t(locale, "approve")}
-                                </button>
-                              ) : null}
+                        </td>
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          {formatAge(locale, animal.birthDate)}
+                        </td>
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          {formatIsraelDate(animal.birthDate)}
+                        </td>
+                        <td className="px-3 py-3">
+                          {animal.sex === "FEMALE" ? (
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={animal.pregnant}
+                                onChange={(e) =>
+                                  togglePregnant(animal, e.target.checked)
+                                }
+                              />
+                              {animal.pregnant
+                                ? t(locale, "pregnantYes")
+                                : t(locale, "pregnantNo")}
+                            </label>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td className="px-3 py-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {farmId &&
+                            animal.vaccinations.some(
+                              (v) => v.status === "PENDING",
+                            ) ? (
                               <button
                                 type="button"
-                                onClick={() => deleteVaccineRecord(v)}
-                                className="rounded-md border border-white/20 px-1.5 py-0.5 text-[11px]"
+                                className="rounded-lg border border-[var(--hay)]/40 px-2 py-0.5 text-xs font-semibold text-[var(--hay)]"
+                                onClick={() =>
+                                  approveVaccines({ animalId: animal.id })
+                                }
                               >
-                                {t(locale, "deleteVaccine")}
+                                {t(locale, "vaccineApproveAnimal")}
                               </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                      {vaccineTypes.length === 0 ? (
-                        <p className="mt-3 text-sm text-[rgba(244,239,230,0.62)]">
-                          {t(locale, "needClinicVaccine")}
-                        </p>
-                      ) : (
-                        <form
-                          onSubmit={(e) => addVaccine(animal.id, e)}
-                          className="mt-3 flex flex-wrap items-end gap-2"
-                        >
-                          <select
-                            className="shop-field min-w-36 flex-1 rounded-xl px-3 py-2 text-sm"
-                            value={vaccineDrafts[animal.id]?.vaccineTypeId || ""}
-                            onChange={(e) =>
-                              setVaccineDrafts((prev) => ({
-                                ...prev,
-                                [animal.id]: {
-                                  vaccineTypeId: e.target.value,
-                                  givenAt: prev[animal.id]?.givenAt || "",
-                                },
-                              }))
-                            }
-                            required
-                          >
-                            <option value="">{t(locale, "vaccineName")}</option>
-                            {vaccineTypes.map((type) => (
-                              <option key={type.id} value={type.id}>
-                                {type.name}
-                                {type.validMonths
-                                  ? ` (${type.validMonths} ${t(locale, "vaccineMonthsUnit")})`
-                                  : ""}
-                              </option>
-                            ))}
-                          </select>
-                          <label className="text-xs">
-                            {t(locale, "vaccineGiven")}
-                            <input
-                              type="date"
-                              className="shop-field mt-1 rounded-xl px-3 py-2 text-sm"
-                              value={vaccineDrafts[animal.id]?.givenAt || ""}
-                              onChange={(e) =>
-                                setVaccineDrafts((prev) => ({
-                                  ...prev,
-                                  [animal.id]: {
-                                    vaccineTypeId:
-                                      prev[animal.id]?.vaccineTypeId || "",
-                                    givenAt: e.target.value,
-                                  },
-                                }))
-                              }
-                              required
-                            />
-                          </label>
+                            ) : null}
+                          </div>
+                          <ul className="mt-1 flex flex-col gap-1">
+                            {animal.vaccinations.map((v) => {
+                              const pending = v.status === "PENDING";
+                              const valid = isVaccineValid(v.validUntil);
+                              return (
+                                <li
+                                  key={v.id}
+                                  className={`flex flex-wrap items-center gap-2 rounded-lg px-2 py-1 text-xs font-semibold ${
+                                    pending
+                                      ? "bg-amber-900/70 text-[var(--hay)]"
+                                      : valid
+                                        ? "bg-emerald-900/70 text-emerald-200"
+                                        : "bg-red-900/70 text-red-200"
+                                  }`}
+                                >
+                                  <span>
+                                    {v.name}
+                                    {v.givenAt
+                                      ? ` · ${formatIsraelDate(v.givenAt)}`
+                                      : ""}
+                                    {` · ${formatIsraelDate(v.validUntil)}`}
+                                    {` · ${
+                                      pending
+                                        ? t(locale, "vaccinePending")
+                                        : valid
+                                          ? t(locale, "vaccineValid")
+                                          : t(locale, "vaccineExpired")
+                                    }`}
+                                  </span>
+                                  {farmId && pending ? (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        approveVaccines({ id: v.id })
+                                      }
+                                      className="rounded-md border border-[var(--hay)]/50 px-1.5 py-0.5 text-[11px]"
+                                    >
+                                      {t(locale, "approve")}
+                                    </button>
+                                  ) : null}
+                                  <button
+                                    type="button"
+                                    onClick={() => deleteVaccineRecord(v)}
+                                    className="rounded-md border border-white/20 px-1.5 py-0.5 text-[11px]"
+                                  >
+                                    {t(locale, "deleteVaccine")}
+                                  </button>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                          {vaccineTypes.length === 0 ? (
+                            <p className="mt-2 text-xs text-[rgba(244,239,230,0.62)]">
+                              {t(locale, "needClinicVaccine")}
+                            </p>
+                          ) : (
+                            <form
+                              onSubmit={(e) => addVaccine(animal.id, e)}
+                              className="mt-2 flex flex-wrap items-end gap-2"
+                            >
+                              <select
+                                className="shop-field min-w-32 rounded-lg px-2 py-1.5 text-xs"
+                                value={
+                                  vaccineDrafts[animal.id]?.vaccineTypeId || ""
+                                }
+                                onChange={(e) =>
+                                  setVaccineDrafts((prev) => ({
+                                    ...prev,
+                                    [animal.id]: {
+                                      vaccineTypeId: e.target.value,
+                                      givenAt: prev[animal.id]?.givenAt || "",
+                                    },
+                                  }))
+                                }
+                                required
+                              >
+                                <option value="">
+                                  {t(locale, "vaccineName")}
+                                </option>
+                                {vaccineTypes.map((type) => (
+                                  <option key={type.id} value={type.id}>
+                                    {type.name}
+                                    {type.validMonths
+                                      ? ` (${type.validMonths} ${t(locale, "vaccineMonthsUnit")})`
+                                      : ""}
+                                  </option>
+                                ))}
+                              </select>
+                              <input
+                                type="date"
+                                className="shop-field rounded-lg px-2 py-1.5 text-xs"
+                                value={vaccineDrafts[animal.id]?.givenAt || ""}
+                                onChange={(e) =>
+                                  setVaccineDrafts((prev) => ({
+                                    ...prev,
+                                    [animal.id]: {
+                                      vaccineTypeId:
+                                        prev[animal.id]?.vaccineTypeId || "",
+                                      givenAt: e.target.value,
+                                    },
+                                  }))
+                                }
+                                required
+                              />
+                              <button
+                                type="submit"
+                                className="btn-primary rounded-lg px-2.5 py-1.5 text-xs font-semibold"
+                              >
+                                {t(locale, "addVaccine")}
+                              </button>
+                            </form>
+                          )}
+                        </td>
+                        <td className="px-3 py-3">
                           <button
-                            type="submit"
-                            className="btn-primary rounded-xl px-3 py-2 text-sm font-semibold"
+                            type="button"
+                            onClick={() => deleteAnimal(animal)}
+                            className="rounded-xl border border-red-400/30 px-3 py-1.5 text-xs text-red-200"
                           >
-                            {t(locale, "addVaccine")}
+                            {t(locale, "deleteAnimal")}
                           </button>
-                        </form>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
-        ))}
+        ) : null}
+
+        {!loading && emptyGroups.length > 0 ? (
+          <section className="mt-4 surface-dark rounded-2xl p-4">
+            <h2 className="text-sm font-semibold text-[rgba(244,239,230,0.7)]">
+              {t(locale, "emptyGroups")}
+            </h2>
+            <ul className="mt-3 space-y-2">
+              {emptyGroups.map((group) => (
+                <li
+                  key={group.id}
+                  className="flex flex-wrap items-center justify-between gap-2"
+                >
+                  <span>{group.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => deleteGroup(group)}
+                    className="rounded-xl border border-red-400/30 px-3 py-1.5 text-sm text-red-200"
+                  >
+                    {t(locale, "deleteGroup")}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </div>
     </div>
   );
