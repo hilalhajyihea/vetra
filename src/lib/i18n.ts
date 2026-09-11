@@ -254,7 +254,11 @@ const he = {
   sortByGroup: "מיון לפי קבוצה",
   sortByNumber: "מיון לפי מספר",
   backToVaccines: "חזרה לחיסונים",
+  backToGroups: "חזרה לקבוצות",
   noVaccineRecords: "אין עדיין רישום לחיסון הזה בעדר",
+  vaccineNotGiven: "לא חוסן",
+  renewVaccine: "חידוש חיסון",
+  renewingVaccine: "מחדשים...",
   noClinicVaccinesBreeder: "הווטרינר עדיין לא הוסיף חיסונים מהלוח שלו.",
   clinicVaccines: "חיסוני הקליניקה",
   clinicVaccinesLead:
@@ -672,7 +676,11 @@ const ar: { [K in keyof typeof he]: string } = {
   sortByGroup: "ترتيب حسب المجموعة",
   sortByNumber: "ترتيب حسب الرقم",
   backToVaccines: "العودة إلى التطعيمات",
+  backToGroups: "العودة إلى المجموعات",
   noVaccineRecords: "لا سجل لهذا التطعيم في القطيع بعد",
+  vaccineNotGiven: "لم يُطعَّم",
+  renewVaccine: "تجديد التطعيم",
+  renewingVaccine: "جاري التجديد...",
   noClinicVaccinesBreeder: "الطبيب البيطري لم يُضف تطعيمات من لوحته بعد.",
   clinicVaccines: "تطعيمات العيادة",
   clinicVaccinesLead:

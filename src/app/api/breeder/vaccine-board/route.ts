@@ -36,30 +36,44 @@ export async function GET(request: Request) {
     const animals = groups.flatMap((group) =>
       group.animals
         .map((animal) => {
-          const record = animalRecordForType(
+          const approved = animalRecordForType(
             animal.vaccinations.filter(
               (item) => !item.status || item.status === "APPROVED",
             ),
             type,
           );
-          if (!record) return null;
+          const latest = animalRecordForType(animal.vaccinations, type);
           return {
             id: animal.id,
             number: animal.number,
             groupId: group.id,
             groupName: group.name,
-            validUntil: serializeVaccineDate(record.validUntil),
-            valid: boardStatusForDates([record.validUntil]).status === "valid",
+            givenAt: latest?.givenAt
+              ? serializeVaccineDate(latest.givenAt)
+              : null,
+            validUntil: latest
+              ? serializeVaccineDate(latest.validUntil)
+              : null,
+            valid: latest
+              ? boardStatusForDates([latest.validUntil]).status === "valid"
+              : false,
+            pending: latest?.status === "PENDING",
+            approvedUntil: approved
+              ? serializeVaccineDate(approved.validUntil)
+              : null,
           };
-        })
-        .filter((row): row is NonNullable<typeof row> => row !== null),
+        }),
     );
 
     const groupRows = groups
       .map((group) => {
         const inGroup = animals.filter((animal) => animal.groupId === group.id);
         if (!inGroup.length) return null;
-        const summary = boardStatusForDates(inGroup.map((row) => row.validUntil));
+        const summary = boardStatusForDates(
+          inGroup
+            .map((row) => row.approvedUntil)
+            .filter((value): value is string => Boolean(value)),
+        );
         return {
           id: group.id,
           name: group.name,
@@ -70,7 +84,11 @@ export async function GET(request: Request) {
       })
       .filter((row): row is NonNullable<typeof row> => row !== null);
 
-    const overall = boardStatusForDates(animals.map((row) => row.validUntil));
+    const overall = boardStatusForDates(
+      animals
+        .map((row) => row.approvedUntil)
+        .filter((value): value is string => Boolean(value)),
+    );
 
     return {
       id: type.id,

@@ -60,6 +60,7 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sortMode, setSortMode] = useState<"group" | "number">("group");
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [groupName, setGroupName] = useState("");
   const [number, setNumber] = useState("");
@@ -116,6 +117,9 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
     if (!q) return allAnimals;
     return allAnimals.filter((animal) => animal.number.includes(q));
   }, [allAnimals, search]);
+
+  const selectedGroup =
+    groups.find((group) => group.id === selectedGroupId) || null;
 
   async function addGroup(e: FormEvent) {
     e.preventDefault();
@@ -223,6 +227,7 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
       return;
     }
     if (groupId === group.id) setGroupId("");
+    if (selectedGroupId === group.id) setSelectedGroupId(null);
     load();
   }
 
@@ -556,6 +561,7 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                 type="button"
                 onClick={() => {
                   setSortMode("group");
+                  setSelectedGroupId(null);
                   setSearch("");
                 }}
                 className={`rounded-xl px-4 py-2 text-sm font-semibold ${
@@ -568,7 +574,10 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
               </button>
               <button
                 type="button"
-                onClick={() => setSortMode("number")}
+                onClick={() => {
+                  setSortMode("number");
+                  setSelectedGroupId(null);
+                }}
                 className={`rounded-xl px-4 py-2 text-sm font-semibold ${
                   sortMode === "number"
                     ? "bg-[var(--teal)] text-[var(--cream)]"
@@ -579,19 +588,25 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
               </button>
             </div>
 
-            {sortMode === "group" ? (
-              <div className="mt-5 space-y-4">
+            {sortMode === "group" && !selectedGroup ? (
+              <ul className="mt-5 space-y-3">
                 {groups.map((group) => (
-                  <section key={group.id} className="surface-dark rounded-2xl p-5">
+                  <li key={group.id} className="surface-dark rounded-2xl p-5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedGroupId(group.id)}
+                        className="flex-1 text-right"
+                      >
                         <h2 className="font-display text-2xl text-[var(--cream)]">
                           {group.name}
                         </h2>
                         <p className="text-sm text-[rgba(244,239,230,0.55)]">
-                          {t(locale, "groupCount", { count: group.animals.length })}
+                          {t(locale, "groupCount", {
+                            count: group.animals.length,
+                          })}
                         </p>
-                      </div>
+                      </button>
                       {group.animals.length === 0 ? (
                         <button
                           type="button"
@@ -602,25 +617,56 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                         </button>
                       ) : null}
                     </div>
-                    {group.animals.length === 0 ? (
-                      <p className="mt-3 text-sm text-[rgba(244,239,230,0.62)]">
-                        {t(locale, "noAnimals")}
-                      </p>
-                    ) : (
-                      <ul className="mt-4 space-y-3">
-                        {group.animals.map((animal) => (
-                          <li
-                            key={animal.id}
-                            className="rounded-xl border border-white/10 bg-black/20 p-4"
-                          >
-                            {renderAnimalCard(animal)}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </section>
+                  </li>
                 ))}
-              </div>
+              </ul>
+            ) : sortMode === "group" && selectedGroup ? (
+              <section className="surface-dark mt-5 rounded-2xl p-5">
+                <button
+                  type="button"
+                  onClick={() => setSelectedGroupId(null)}
+                  className="rounded-xl border border-white/20 px-4 py-2 text-sm"
+                >
+                  {t(locale, "backToGroups")}
+                </button>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h2 className="font-display text-2xl text-[var(--cream)]">
+                      {selectedGroup.name}
+                    </h2>
+                    <p className="text-sm text-[rgba(244,239,230,0.55)]">
+                      {t(locale, "groupCount", {
+                        count: selectedGroup.animals.length,
+                      })}
+                    </p>
+                  </div>
+                  {selectedGroup.animals.length === 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => deleteGroup(selectedGroup)}
+                      className="rounded-xl border border-red-400/30 px-3 py-1.5 text-sm text-red-200"
+                    >
+                      {t(locale, "deleteGroup")}
+                    </button>
+                  ) : null}
+                </div>
+                {selectedGroup.animals.length === 0 ? (
+                  <p className="mt-3 text-sm text-[rgba(244,239,230,0.62)]">
+                    {t(locale, "noAnimals")}
+                  </p>
+                ) : (
+                  <ul className="mt-4 space-y-3">
+                    {selectedGroup.animals.map((animal) => (
+                      <li
+                        key={animal.id}
+                        className="rounded-xl border border-white/10 bg-black/20 p-4"
+                      >
+                        {renderAnimalCard(animal)}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
             ) : (
               <section className="surface-dark mt-5 overflow-hidden rounded-2xl">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-3">

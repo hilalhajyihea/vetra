@@ -10,6 +10,8 @@ export type VaccineRecord = {
   name: string;
   vaccineTypeId: string | null;
   validUntil: Date | string;
+  givenAt?: Date | string | null;
+  status?: string | null;
 };
 
 export function recordMatchesType(
