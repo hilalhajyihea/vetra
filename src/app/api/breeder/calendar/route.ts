@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 type EventKind =
   | "vaccine"
   | "vaccineGiven"
+  | "sponge"
+  | "hormone"
   | "mating"
   | "lambing"
   | "checkup1"
@@ -80,6 +82,14 @@ export async function GET(request: Request) {
         name: vaccine.name,
       });
     }
+    pushEvent(events, animal.spongeDate, "sponge", {
+      animalNumber: animal.number,
+      groupName,
+    });
+    pushEvent(events, animal.hormoneDate, "hormone", {
+      animalNumber: animal.number,
+      groupName,
+    });
     pushEvent(events, animal.matingDate, "mating", {
       animalNumber: animal.number,
       groupName,

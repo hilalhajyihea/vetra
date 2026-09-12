@@ -5,23 +5,24 @@ import { useRouter } from "next/navigation";
 import { useUiLocale } from "@/components/LocaleProvider";
 import { t, type Locale } from "@/lib/i18n";
 
-type BreedingMethod = "" | "SPONGE" | "HORMONE" | "AI";
-
 type FemaleRow = {
   id: string;
   number: string;
   pregnant: boolean;
+  spongeDate: string;
+  hormoneDate: string;
   matingDate: string;
   lambingDate: string;
   checkup1Date: string;
   checkup2Date: string;
-  breedingMethod: BreedingMethod;
 };
 
 type GroupRow = {
   id: string;
   name: string;
   pregnant: boolean;
+  spongeDate: string;
+  hormoneDate: string;
   matingDate: string;
   lambingDate: string;
   checkup1Date: string;
@@ -114,11 +115,12 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
     id: string,
     payload: {
       pregnant: boolean;
+      spongeDate: string;
+      hormoneDate: string;
       matingDate: string;
       lambingDate: string;
       checkup1Date: string;
       checkup2Date: string;
-      breedingMethod?: BreedingMethod;
     },
   ) {
     setError("");
@@ -279,7 +281,6 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
                             [animal.id]: { ...draft, ...next },
                           }))
                         }
-                        showMethod
                       />
                       <button
                         type="submit"
@@ -302,27 +303,26 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
 
 type FieldValue = {
   pregnant: boolean;
+  spongeDate: string;
+  hormoneDate: string;
   matingDate: string;
   lambingDate: string;
   checkup1Date: string;
   checkup2Date: string;
-  breedingMethod?: BreedingMethod;
 };
 
 function PregnancyFields({
   locale,
   value,
   onChange,
-  showMethod = false,
 }: {
   locale: Locale;
   value: FieldValue;
   onChange: (next: Partial<FieldValue>) => void;
-  showMethod?: boolean;
 }) {
   return (
     <div className="mt-4 grid gap-3 sm:grid-cols-2">
-      <label className="flex items-center gap-2 text-sm font-semibold">
+      <label className="flex items-center gap-2 text-sm font-semibold sm:col-span-2">
         <input
           type="checkbox"
           checked={value.pregnant}
@@ -330,25 +330,16 @@ function PregnancyFields({
         />
         {t(locale, "pregnant")}
       </label>
-      {showMethod ? (
-        <label className="text-sm">
-          {t(locale, "breedingMethod")}
-          <select
-            className="shop-field mt-1 w-full rounded-xl px-3 py-2 text-sm"
-            value={value.breedingMethod || ""}
-            onChange={(e) =>
-              onChange({ breedingMethod: e.target.value as BreedingMethod })
-            }
-          >
-            <option value="">{t(locale, "breedingNone")}</option>
-            <option value="SPONGE">{t(locale, "breedingSponge")}</option>
-            <option value="HORMONE">{t(locale, "breedingHormone")}</option>
-            <option value="AI">{t(locale, "breedingAi")}</option>
-          </select>
-        </label>
-      ) : (
-        <span />
-      )}
+      <DateField
+        label={t(locale, "spongeDate")}
+        value={value.spongeDate}
+        onChange={(spongeDate) => onChange({ spongeDate })}
+      />
+      <DateField
+        label={t(locale, "hormoneDate")}
+        value={value.hormoneDate}
+        onChange={(hormoneDate) => onChange({ hormoneDate })}
+      />
       <DateField
         label={t(locale, "matingDate")}
         value={value.matingDate}

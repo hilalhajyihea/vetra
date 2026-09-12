@@ -8,26 +8,23 @@ function serializeFemale(animal: {
   id: string;
   number: string;
   pregnant: boolean;
+  spongeDate: Date | null;
+  hormoneDate: Date | null;
   matingDate: Date | null;
   lambingDate: Date | null;
   checkup1Date: Date | null;
   checkup2Date: Date | null;
-  breedingMethod: string | null;
 }) {
   return {
     id: animal.id,
     number: animal.number,
     pregnant: animal.pregnant,
+    spongeDate: dateInputValue(animal.spongeDate),
+    hormoneDate: dateInputValue(animal.hormoneDate),
     matingDate: dateInputValue(animal.matingDate),
     lambingDate: dateInputValue(animal.lambingDate),
     checkup1Date: dateInputValue(animal.checkup1Date),
     checkup2Date: dateInputValue(animal.checkup2Date),
-    breedingMethod:
-      animal.breedingMethod === "SPONGE" ||
-      animal.breedingMethod === "HORMONE" ||
-      animal.breedingMethod === "AI"
-        ? animal.breedingMethod
-        : "",
   };
 }
 
@@ -60,6 +57,8 @@ export async function GET(request: Request) {
         id: group.id,
         name: group.name,
         pregnant: females.some((animal) => animal.pregnant),
+        spongeDate: sharedValue(females.map((animal) => animal.spongeDate)),
+        hormoneDate: sharedValue(females.map((animal) => animal.hormoneDate)),
         matingDate: sharedValue(females.map((animal) => animal.matingDate)),
         lambingDate: sharedValue(females.map((animal) => animal.lambingDate)),
         checkup1Date: sharedValue(females.map((animal) => animal.checkup1Date)),
@@ -74,23 +73,23 @@ const patchSchema = z.object({
   target: z.enum(["group", "animal"]),
   id: z.string().min(1),
   pregnant: z.boolean(),
+  spongeDate: z.string().optional(),
+  hormoneDate: z.string().optional(),
   matingDate: z.string().optional(),
   lambingDate: z.string().optional(),
   checkup1Date: z.string().optional(),
   checkup2Date: z.string().optional(),
-  breedingMethod: z.enum(["SPONGE", "HORMONE", "AI", ""]).optional(),
 });
 
-function pregnancyData(input: z.infer<typeof patchSchema>, includeMethod: boolean) {
+function pregnancyData(input: z.infer<typeof patchSchema>) {
   return {
     pregnant: input.pregnant,
+    spongeDate: parseOptionalDate(input.spongeDate),
+    hormoneDate: parseOptionalDate(input.hormoneDate),
     matingDate: parseOptionalDate(input.matingDate),
     lambingDate: parseOptionalDate(input.lambingDate),
     checkup1Date: parseOptionalDate(input.checkup1Date),
     checkup2Date: parseOptionalDate(input.checkup2Date),
-    ...(includeMethod
-      ? { breedingMethod: input.breedingMethod || null }
-      : {}),
   };
 }
 
@@ -116,7 +115,7 @@ export async function PATCH(request: Request) {
 
     await prisma.animal.updateMany({
       where: { groupId: group.id, breederId: auth.breeder.id, sex: "FEMALE" },
-      data: pregnancyData(parsed.data, false),
+      data: pregnancyData(parsed.data),
     });
     return NextResponse.json({ ok: true });
   }
@@ -130,7 +129,7 @@ export async function PATCH(request: Request) {
 
   const updated = await prisma.animal.update({
     where: { id: animal.id },
-    data: pregnancyData(parsed.data, true),
+    data: pregnancyData(parsed.data),
   });
 
   return NextResponse.json({ animal: serializeFemale(updated) });

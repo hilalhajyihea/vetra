@@ -10,6 +10,8 @@ import { t, type Locale, type MsgKey } from "@/lib/i18n";
 type EventKind =
   | "vaccine"
   | "vaccineGiven"
+  | "sponge"
+  | "hormone"
   | "mating"
   | "lambing"
   | "checkup1"
@@ -60,6 +62,8 @@ const WEEKDAY_KEYS = [
 const EVENT_KEYS: Record<Exclude<EventKind, "appointment">, MsgKey> = {
   vaccine: "eventVaccineDue",
   vaccineGiven: "eventVaccineGiven",
+  sponge: "eventSponge",
+  hormone: "eventHormone",
   mating: "eventMating",
   lambing: "eventLambing",
   checkup1: "eventCheckup1",
