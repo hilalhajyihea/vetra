@@ -54,6 +54,7 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sortMode, setSortMode] = useState<"group" | "number">("group");
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [groupDrafts, setGroupDrafts] = useState<Record<string, GroupRow>>({});
   const [animalDrafts, setAnimalDrafts] = useState<Record<string, FemaleRow>>({});
@@ -107,8 +108,11 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
   const filteredAnimals = useMemo(() => {
     const q = search.trim();
     if (!q) return animals;
-    return animals.filter((animal) => animal.number.trim() === q);
+    return animals.filter((animal) => animal.number.includes(q));
   }, [animals, search]);
+
+  const selectedGroup =
+    groups.find((group) => group.id === selectedGroupId) || null;
 
   async function save(
     target: "group" | "animal",
@@ -161,7 +165,11 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
       <div className="mt-5 flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => setSortMode("group")}
+          onClick={() => {
+            setSortMode("group");
+            setSelectedGroupId(null);
+            setSearch("");
+          }}
           className={`rounded-xl px-4 py-2 text-sm font-semibold ${
             sortMode === "group"
               ? "bg-[var(--teal)] text-[var(--cream)]"
@@ -172,7 +180,10 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
         </button>
         <button
           type="button"
-          onClick={() => setSortMode("number")}
+          onClick={() => {
+            setSortMode("number");
+            setSelectedGroupId(null);
+          }}
           className={`rounded-xl px-4 py-2 text-sm font-semibold ${
             sortMode === "number"
               ? "bg-[var(--teal)] text-[var(--cream)]"
@@ -203,47 +214,77 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
         </p>
       ) : null}
 
-      {!loading && sortMode === "group" ? (
-        <ul className="mt-5 space-y-4">
+      {!loading && sortMode === "group" && !selectedGroup ? (
+        <ul className="mt-5 space-y-3">
           {groups.map((group) => {
             const draft = groupDrafts[group.id] || group;
             return (
               <li key={group.id}>
-                <form
-                  onSubmit={(e) => saveGroup(e, group.id)}
-                  className={`rounded-2xl border px-4 py-4 ${cardClass(draft.pregnant)}`}
+                <button
+                  type="button"
+                  onClick={() => setSelectedGroupId(group.id)}
+                  className={`w-full rounded-2xl border px-4 py-4 text-right ${cardClass(draft.pregnant)}`}
                 >
                   <h2 className="font-display text-2xl">{group.name}</h2>
-                  {group.females.length === 0 ? (
-                    <p className="mt-2 text-sm opacity-80">
-                      {t(locale, "noFemalesInGroup")}
-                    </p>
-                  ) : (
-                    <>
-                      <PregnancyFields
-                        locale={locale}
-                        value={draft}
-                        onChange={(next) =>
-                          setGroupDrafts((prev) => ({
-                            ...prev,
-                            [group.id]: { ...draft, ...next },
-                          }))
-                        }
-                      />
-                      <button
-                        type="submit"
-                        disabled={savingId === group.id}
-                        className="btn-primary mt-4 rounded-xl px-4 py-2 text-sm font-semibold"
-                      >
-                        {t(locale, "saveGroupPregnancy")}
-                      </button>
-                    </>
-                  )}
-                </form>
+                  <p className="mt-1 text-sm opacity-80">
+                    {t(locale, "groupCount", { count: group.females.length })}
+                  </p>
+                </button>
               </li>
             );
           })}
         </ul>
+      ) : null}
+
+      {!loading && sortMode === "group" && selectedGroup ? (
+        <div className="mt-5">
+          <button
+            type="button"
+            onClick={() => setSelectedGroupId(null)}
+            className="rounded-xl border border-white/20 px-4 py-2 text-sm"
+          >
+            {t(locale, "backToGroups")}
+          </button>
+          <form
+            onSubmit={(e) => saveGroup(e, selectedGroup.id)}
+            className={`mt-4 rounded-2xl border px-4 py-4 ${cardClass(
+              (groupDrafts[selectedGroup.id] || selectedGroup).pregnant,
+            )}`}
+          >
+            <h2 className="font-display text-2xl">{selectedGroup.name}</h2>
+            <p className="mt-1 text-sm opacity-80">
+              {t(locale, "groupCount", { count: selectedGroup.females.length })}
+            </p>
+            {selectedGroup.females.length === 0 ? (
+              <p className="mt-3 text-sm opacity-80">
+                {t(locale, "noFemalesInGroup")}
+              </p>
+            ) : (
+              <>
+                <PregnancyFields
+                  locale={locale}
+                  value={groupDrafts[selectedGroup.id] || selectedGroup}
+                  onChange={(next) =>
+                    setGroupDrafts((prev) => ({
+                      ...prev,
+                      [selectedGroup.id]: {
+                        ...(prev[selectedGroup.id] || selectedGroup),
+                        ...next,
+                      },
+                    }))
+                  }
+                />
+                <button
+                  type="submit"
+                  disabled={savingId === selectedGroup.id}
+                  className="btn-primary mt-4 rounded-xl px-4 py-2 text-sm font-semibold"
+                >
+                  {t(locale, "saveGroupPregnancy")}
+                </button>
+              </>
+            )}
+          </form>
+        </div>
       ) : null}
 
       {!loading && sortMode === "number" && animals.length > 0 ? (
