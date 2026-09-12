@@ -357,10 +357,10 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
         ) : (
           <form
             onSubmit={(e) => addVaccine(animal.id, e)}
-            className="mt-2 flex flex-wrap items-end gap-2"
+            className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end"
           >
             <select
-              className="shop-field min-w-32 rounded-lg px-2 py-1.5 text-xs"
+              className="shop-field w-full min-w-32 rounded-lg px-2 py-1.5 text-xs sm:w-auto"
               value={vaccineDrafts[animal.id]?.vaccineTypeId || ""}
               onChange={(e) =>
                 setVaccineDrafts((prev) => ({
@@ -385,7 +385,7 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
             </select>
             <input
               type="date"
-              className="shop-field rounded-lg px-2 py-1.5 text-xs"
+              className="shop-field w-full rounded-lg px-2 py-1.5 text-xs sm:w-auto"
               value={vaccineDrafts[animal.id]?.givenAt || ""}
               onChange={(e) =>
                 setVaccineDrafts((prev) => ({
@@ -400,7 +400,7 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
             />
             <button
               type="submit"
-              className="btn-primary rounded-lg px-2.5 py-1.5 text-xs font-semibold"
+              className="btn-primary w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold sm:w-auto"
             >
               {t(locale, "addVaccine")}
             </button>
@@ -439,7 +439,7 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
           <button
             type="button"
             onClick={() => deleteAnimal(animal)}
-            className="rounded-xl border border-red-400/30 px-3 py-1.5 text-sm text-red-200"
+            className="w-full rounded-xl border border-red-400/30 px-3 py-1.5 text-sm text-red-200 sm:w-auto"
           >
             {t(locale, "deleteAnimal")}
           </button>
@@ -687,90 +687,105 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                       : t(locale, "noAnimals")}
                   </p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[56rem] text-right text-sm">
-                      <thead className="bg-black/30 text-[rgba(244,239,230,0.7)]">
-                        <tr>
-                          <th className="px-3 py-2 font-semibold">
-                            {t(locale, "animalNumber")}
-                          </th>
-                          <th className="px-3 py-2 font-semibold">
-                            {t(locale, "groupName")}
-                          </th>
-                          <th className="px-3 py-2 font-semibold">
-                            {t(locale, "sex")}
-                          </th>
-                          <th className="px-3 py-2 font-semibold">
-                            {t(locale, "age")}
-                          </th>
-                          <th className="px-3 py-2 font-semibold">
-                            {t(locale, "birthDate")}
-                          </th>
-                          <th className="px-3 py-2 font-semibold">
-                            {t(locale, "pregnant")}
-                          </th>
-                          <th className="px-3 py-2 font-semibold">
-                            {t(locale, "vaccines")}
-                          </th>
-                          <th className="px-3 py-2 font-semibold" />
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredAnimals.map((animal) => (
-                          <tr
-                            key={animal.id}
-                            className="border-t border-white/10 align-top even:bg-black/15"
-                          >
-                            <td className="px-3 py-3 text-base font-semibold">
-                              {animal.number}
-                            </td>
-                            <td className="px-3 py-3">{animal.groupName}</td>
-                            <td className="px-3 py-3">
-                              {animal.sex === "FEMALE"
-                                ? t(locale, "sexFemale")
-                                : t(locale, "sexMale")}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap">
-                              {formatAge(locale, animal.birthDate)}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap">
-                              {formatIsraelDate(animal.birthDate)}
-                            </td>
-                            <td className="px-3 py-3">
-                              {animal.sex === "FEMALE" ? (
-                                <label className="flex items-center gap-2">
-                                  <input
-                                    type="checkbox"
-                                    checked={animal.pregnant}
-                                    onChange={(e) =>
-                                      togglePregnant(animal, e.target.checked)
-                                    }
-                                  />
-                                  {animal.pregnant
-                                    ? t(locale, "pregnantYes")
-                                    : t(locale, "pregnantNo")}
-                                </label>
-                              ) : (
-                                "—"
-                              )}
-                            </td>
-                            <td className="px-3 py-3">
-                              {renderVaccines(animal)}
-                            </td>
-                            <td className="px-3 py-3">
-                              <button
-                                type="button"
-                                onClick={() => deleteAnimal(animal)}
-                                className="rounded-xl border border-red-400/30 px-3 py-1.5 text-xs text-red-200"
-                              >
-                                {t(locale, "deleteAnimal")}
-                              </button>
-                            </td>
+                  <>
+                    <ul className="space-y-3 p-4 md:hidden">
+                      {filteredAnimals.map((animal) => (
+                        <li
+                          key={animal.id}
+                          className="rounded-xl border border-white/10 bg-black/20 p-4"
+                        >
+                          <p className="mb-3 text-sm text-[rgba(244,239,230,0.7)]">
+                            {animal.groupName}
+                          </p>
+                          {renderAnimalCard(animal)}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="hidden overflow-x-auto md:block">
+                      <table className="w-full min-w-[56rem] text-right text-sm">
+                        <thead className="bg-black/30 text-[rgba(244,239,230,0.7)]">
+                          <tr>
+                            <th className="px-3 py-2 font-semibold">
+                              {t(locale, "animalNumber")}
+                            </th>
+                            <th className="px-3 py-2 font-semibold">
+                              {t(locale, "groupName")}
+                            </th>
+                            <th className="px-3 py-2 font-semibold">
+                              {t(locale, "sex")}
+                            </th>
+                            <th className="px-3 py-2 font-semibold">
+                              {t(locale, "age")}
+                            </th>
+                            <th className="px-3 py-2 font-semibold">
+                              {t(locale, "birthDate")}
+                            </th>
+                            <th className="px-3 py-2 font-semibold">
+                              {t(locale, "pregnant")}
+                            </th>
+                            <th className="px-3 py-2 font-semibold">
+                              {t(locale, "vaccines")}
+                            </th>
+                            <th className="px-3 py-2 font-semibold" />
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {filteredAnimals.map((animal) => (
+                            <tr
+                              key={animal.id}
+                              className="border-t border-white/10 align-top even:bg-black/15"
+                            >
+                              <td className="px-3 py-3 text-base font-semibold">
+                                {animal.number}
+                              </td>
+                              <td className="px-3 py-3">{animal.groupName}</td>
+                              <td className="px-3 py-3">
+                                {animal.sex === "FEMALE"
+                                  ? t(locale, "sexFemale")
+                                  : t(locale, "sexMale")}
+                              </td>
+                              <td className="px-3 py-3 whitespace-nowrap">
+                                {formatAge(locale, animal.birthDate)}
+                              </td>
+                              <td className="px-3 py-3 whitespace-nowrap">
+                                {formatIsraelDate(animal.birthDate)}
+                              </td>
+                              <td className="px-3 py-3">
+                                {animal.sex === "FEMALE" ? (
+                                  <label className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={animal.pregnant}
+                                      onChange={(e) =>
+                                        togglePregnant(animal, e.target.checked)
+                                      }
+                                    />
+                                    {animal.pregnant
+                                      ? t(locale, "pregnantYes")
+                                      : t(locale, "pregnantNo")}
+                                  </label>
+                                ) : (
+                                  "—"
+                                )}
+                              </td>
+                              <td className="px-3 py-3">
+                                {renderVaccines(animal)}
+                              </td>
+                              <td className="px-3 py-3">
+                                <button
+                                  type="button"
+                                  onClick={() => deleteAnimal(animal)}
+                                  className="rounded-xl border border-red-400/30 px-3 py-1.5 text-xs text-red-200"
+                                >
+                                  {t(locale, "deleteAnimal")}
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
                 )}
               </section>
             )}

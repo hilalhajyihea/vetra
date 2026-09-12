@@ -171,7 +171,37 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
     }
   }
 
-  function renderAnimalTable(showGroup: boolean) {
+  function renewControls(animal: AnimalRow) {
+    return (
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <input
+          type="date"
+          className="shop-field w-full rounded-lg px-2 py-1.5 text-xs sm:w-auto"
+          value={givenDrafts[animal.id] || today}
+          onChange={(e) =>
+            setGivenDrafts((prev) => ({
+              ...prev,
+              [animal.id]: e.target.value,
+            }))
+          }
+        />
+        <button
+          type="button"
+          className="btn-primary w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold disabled:opacity-50 sm:w-auto"
+          disabled={savingId === animal.id}
+          onClick={() => renewVaccine(animal)}
+        >
+          {savingId === animal.id
+            ? t(locale, "renewingVaccine")
+            : animal.validUntil
+              ? t(locale, "renewVaccine")
+              : t(locale, "addVaccine")}
+        </button>
+      </div>
+    );
+  }
+
+  function renderAnimalList(showGroup: boolean) {
     if (tableAnimals.length === 0) {
       return (
         <p className="mt-4 text-sm text-[rgba(244,239,230,0.62)]">
@@ -182,84 +212,98 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
       );
     }
     return (
-      <div className="mt-4 overflow-x-auto rounded-2xl border border-white/10">
-        <table className="w-full min-w-[36rem] text-right text-sm">
-          <thead className="bg-black/30 text-[rgba(244,239,230,0.7)]">
-            <tr>
-              <th className="px-3 py-2 font-semibold">
-                {t(locale, "animalNumber")}
-              </th>
+      <>
+        <ul className="mt-4 space-y-3 md:hidden">
+          {tableAnimals.map((animal) => (
+            <li
+              key={animal.id}
+              className={`rounded-2xl border px-4 py-4 ${statusClass(animal)}`}
+            >
+              <p className="text-lg font-semibold">
+                {t(locale, "animalNumber")} {animal.number}
+              </p>
               {showGroup ? (
-                <th className="px-3 py-2 font-semibold">
-                  {t(locale, "groupName")}
-                </th>
+                <p className="mt-1 text-sm opacity-75">{animal.groupName}</p>
               ) : null}
-              <th className="px-3 py-2 font-semibold">
-                {t(locale, "vaccineGiven")}
-              </th>
-              <th className="px-3 py-2 font-semibold">
-                {t(locale, "vaccineUntil")}
-              </th>
-              <th className="px-3 py-2 font-semibold">
-                {t(locale, "vaccines")}
-              </th>
-              <th className="px-3 py-2 font-semibold">
-                {t(locale, "renewVaccine")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {tableAnimals.map((animal) => (
-              <tr key={animal.id} className={statusClass(animal)}>
-                <td className="px-3 py-2 font-semibold">{animal.number}</td>
+              <dl className="mt-3 grid gap-2 text-sm">
+                <div>
+                  <dt className="opacity-70">{t(locale, "vaccineGiven")}</dt>
+                  <dd>
+                    {animal.givenAt
+                      ? formatIsraelDate(animal.givenAt)
+                      : t(locale, "vaccineNotGiven")}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="opacity-70">{t(locale, "vaccineUntil")}</dt>
+                  <dd>
+                    {animal.validUntil
+                      ? formatIsraelDate(animal.validUntil)
+                      : "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="opacity-70">{t(locale, "vaccines")}</dt>
+                  <dd className="font-semibold">{animalStatusLabel(animal)}</dd>
+                </div>
+              </dl>
+              <div className="mt-3">{renewControls(animal)}</div>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4 hidden overflow-x-auto rounded-2xl border border-white/10 md:block">
+          <table className="w-full min-w-[36rem] text-right text-sm">
+            <thead className="bg-black/30 text-[rgba(244,239,230,0.7)]">
+              <tr>
+                <th className="px-3 py-2 font-semibold">
+                  {t(locale, "animalNumber")}
+                </th>
                 {showGroup ? (
-                  <td className="px-3 py-2">{animal.groupName}</td>
+                  <th className="px-3 py-2 font-semibold">
+                    {t(locale, "groupName")}
+                  </th>
                 ) : null}
-                <td className="px-3 py-2">
-                  {animal.givenAt
-                    ? formatIsraelDate(animal.givenAt)
-                    : t(locale, "vaccineNotGiven")}
-                </td>
-                <td className="px-3 py-2">
-                  {animal.validUntil
-                    ? formatIsraelDate(animal.validUntil)
-                    : "—"}
-                </td>
-                <td className="px-3 py-2 font-semibold">
-                  {animalStatusLabel(animal)}
-                </td>
-                <td className="px-3 py-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <input
-                      type="date"
-                      className="shop-field rounded-lg px-2 py-1.5 text-xs"
-                      value={givenDrafts[animal.id] || today}
-                      onChange={(e) =>
-                        setGivenDrafts((prev) => ({
-                          ...prev,
-                          [animal.id]: e.target.value,
-                        }))
-                      }
-                    />
-                    <button
-                      type="button"
-                      className="btn-primary rounded-lg px-2.5 py-1.5 text-xs font-semibold disabled:opacity-50"
-                      disabled={savingId === animal.id}
-                      onClick={() => renewVaccine(animal)}
-                    >
-                      {savingId === animal.id
-                        ? t(locale, "renewingVaccine")
-                        : animal.validUntil
-                          ? t(locale, "renewVaccine")
-                          : t(locale, "addVaccine")}
-                    </button>
-                  </div>
-                </td>
+                <th className="px-3 py-2 font-semibold">
+                  {t(locale, "vaccineGiven")}
+                </th>
+                <th className="px-3 py-2 font-semibold">
+                  {t(locale, "vaccineUntil")}
+                </th>
+                <th className="px-3 py-2 font-semibold">
+                  {t(locale, "vaccines")}
+                </th>
+                <th className="px-3 py-2 font-semibold">
+                  {t(locale, "renewVaccine")}
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {tableAnimals.map((animal) => (
+                <tr key={animal.id} className={statusClass(animal)}>
+                  <td className="px-3 py-2 font-semibold">{animal.number}</td>
+                  {showGroup ? (
+                    <td className="px-3 py-2">{animal.groupName}</td>
+                  ) : null}
+                  <td className="px-3 py-2">
+                    {animal.givenAt
+                      ? formatIsraelDate(animal.givenAt)
+                      : t(locale, "vaccineNotGiven")}
+                  </td>
+                  <td className="px-3 py-2">
+                    {animal.validUntil
+                      ? formatIsraelDate(animal.validUntil)
+                      : "—"}
+                  </td>
+                  <td className="px-3 py-2 font-semibold">
+                    {animalStatusLabel(animal)}
+                  </td>
+                  <td className="px-3 py-2">{renewControls(animal)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
     );
   }
 
@@ -421,7 +465,7 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               ) : null}
-              {renderAnimalTable(sortMode === "number")}
+              {renderAnimalList(sortMode === "number")}
             </div>
           )}
         </div>
