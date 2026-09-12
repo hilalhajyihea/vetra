@@ -97,10 +97,26 @@ model Animal {
   breeder      Breeder             @relation(fields: [breederId], references: [id], onDelete: Cascade)
   group        AnimalGroup         @relation(fields: [groupId], references: [id], onDelete: Restrict)
   vaccinations AnimalVaccination[]
+  lambings     AnimalLambing[]
 
   @@unique([breederId, number])
   @@index([breederId])
   @@index([groupId])
+}
+
+model AnimalLambing {
+  id         String   @id @default(cuid())
+  animalId   String
+  lambedAt   DateTime @db.Date
+  bornCount  Int
+  aliveCount Int
+  note       String   @default("")
+  createdAt  DateTime @default(now())
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@unique([animalId, lambedAt])
+  @@index([animalId])
 }
 
 model VaccineType {

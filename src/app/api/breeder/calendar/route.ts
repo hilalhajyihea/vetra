@@ -54,6 +54,7 @@ export async function GET(request: Request) {
     include: {
       group: { select: { name: true } },
       vaccinations: { orderBy: { validUntil: "asc" } },
+      lambings: { orderBy: { lambedAt: "asc" } },
     },
   });
 
@@ -94,10 +95,19 @@ export async function GET(request: Request) {
       animalNumber: animal.number,
       groupName,
     });
-    pushEvent(events, animal.lambingDate, "lambing", {
-      animalNumber: animal.number,
-      groupName,
-    });
+    if (animal.lambings.length) {
+      for (const lambing of animal.lambings) {
+        pushEvent(events, lambing.lambedAt, "lambing", {
+          animalNumber: animal.number,
+          groupName,
+        });
+      }
+    } else {
+      pushEvent(events, animal.lambingDate, "lambing", {
+        animalNumber: animal.number,
+        groupName,
+      });
+    }
     pushEvent(events, animal.checkup1Date, "checkup1", {
       animalNumber: animal.number,
       groupName,

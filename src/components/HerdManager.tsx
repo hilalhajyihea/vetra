@@ -3,8 +3,19 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUiLocale } from "@/components/LocaleProvider";
-import { formatAge, formatIsraelDate, isVaccineValid } from "@/lib/herd";
+import {
+  formatAge,
+  formatIsraelDate,
+  isVaccineValid,
+  jerusalemTodayKey,
+} from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
+import {
+  formatLambingStat,
+  serializeLambing,
+  summarizeLambings,
+  type LambingRecord,
+} from "@/lib/lambing";
 
 type Vaccine = {
   id: string;
@@ -21,6 +32,7 @@ type Animal = {
   birthDate: string;
   pregnant: boolean;
   vaccinations: Vaccine[];
+  lambings?: LambingRecord[];
 };
 
 type Group = {
@@ -72,9 +84,17 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
   const [vaccineDrafts, setVaccineDrafts] = useState<
     Record<string, { vaccineTypeId: string; givenAt: string }>
   >({});
+  const [openLambingId, setOpenLambingId] = useState<string | null>(null);
+  const [savingLambingId, setSavingLambingId] = useState("");
+  const [lambingDrafts, setLambingDrafts] = useState<
+    Record<
+      string,
+      { lambedAt: string; bornCount: string; aliveCount: string; note: string }
+    >
+  >({});
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     try {
       const [groupsRes, typesRes] = await Promise.all([
         fetch(withFarm("/api/breeder/groups", farmId)),
@@ -271,6 +291,90 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
     load();
   }
 
+  function animalLambings(animal: Animal): LambingRecord[] {
+    return (animal.lambings || []).map((row) => serializeLambing(row));
+  }
+
+  function lambingDraft(animalId: string) {
+    return (
+      lambingDrafts[animalId] || {
+        lambedAt: jerusalemTodayKey(),
+        bornCount: "1",
+        aliveCount: "",
+        note: "",
+      }
+    );
+  }
+
+  function lambingError(code: string) {
+    if (code === "LAMBING_FUTURE") return t(locale, "errLambingFuture");
+    if (code === "LAMBING_COUNTS") return t(locale, "errLambingCounts");
+    return t(locale, "updateFailed");
+  }
+
+  async function addLambing(animalId: string, e: FormEvent) {
+    e.preventDefault();
+    const draft = lambingDraft(animalId);
+    setError("");
+    setSavingLambingId(animalId);
+    try {
+      const res = await fetch("/api/breeder/lambings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          animalId,
+          lambedAt: draft.lambedAt,
+          bornCount: Number(draft.bornCount),
+          aliveCount: draft.aliveCount ? Number(draft.aliveCount) : undefined,
+          note: draft.note,
+          farmId,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(lambingError(data.error || ""));
+        return;
+      }
+      setLambingDrafts((prev) => ({
+        ...prev,
+        [animalId]: {
+          lambedAt: jerusalemTodayKey(),
+          bornCount: "1",
+          aliveCount: "",
+          note: "",
+        },
+      }));
+      await load({ silent: true });
+    } catch {
+      setError(t(locale, "updateFailed"));
+    } finally {
+      setSavingLambingId("");
+    }
+  }
+
+  async function deleteLambing(record: LambingRecord) {
+    if (
+      !window.confirm(
+        t(locale, "confirmDeleteLambing", {
+          date: formatIsraelDate(record.lambedAt),
+        }),
+      )
+    ) {
+      return;
+    }
+    setError("");
+    const params = new URLSearchParams({ id: record.id });
+    if (farmId) params.set("farmId", farmId);
+    const res = await fetch(`/api/breeder/lambings?${params}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      setError(t(locale, "updateFailed"));
+      return;
+    }
+    load({ silent: true });
+  }
+
   async function deleteVaccineRecord(vaccine: Vaccine) {
     if (!window.confirm(t(locale, "confirmDeleteAnimalVaccine", { name: vaccine.name }))) {
       return;
@@ -410,6 +514,166 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
     );
   }
 
+  function renderLambingHistory(animal: Animal) {
+    if (animal.sex !== "FEMALE") return null;
+    const records = animalLambings(animal);
+    const summary = summarizeLambings(records);
+    const open = openLambingId === animal.id;
+    const draft = lambingDraft(animal.id);
+    return (
+      <div>
+        <p className="text-sm font-semibold">{t(locale, "lambingHistory")}</p>
+        {summary.lambingCount === 0 ? (
+          <p className="mt-1 text-xs text-[rgba(244,239,230,0.62)]">
+            {t(locale, "noLambings")}
+          </p>
+        ) : (
+          <div className="mt-1 text-sm">
+            <p>
+              {t(locale, "lambingSummary", {
+                lambings: summary.lambingCount,
+                born: summary.bornTotal,
+                perYear: formatLambingStat(summary.perYear),
+              })}
+            </p>
+            <p className="mt-1 text-xs text-[rgba(244,239,230,0.75)]">
+              {t(locale, "lambingAvg", {
+                avg: formatLambingStat(summary.avgBorn),
+              })}
+            </p>
+            {summary.byYear.map((row) => (
+              <p
+                key={row.year}
+                className="text-xs text-[rgba(244,239,230,0.75)]"
+              >
+                {t(locale, "lambingYearLine", {
+                  year: row.year,
+                  born: row.born,
+                })}
+              </p>
+            ))}
+          </div>
+        )}
+        <button
+          type="button"
+          className="mt-2 rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold"
+          onClick={() =>
+            setOpenLambingId((prev) => (prev === animal.id ? null : animal.id))
+          }
+        >
+          {open ? t(locale, "cancel") : t(locale, "addLambing")}
+        </button>
+        {open ? (
+          <div className="mt-3 space-y-3">
+            {records.length > 0 ? (
+              <ul className="space-y-2">
+                {records.map((record) => (
+                  <li
+                    key={record.id}
+                    className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs"
+                  >
+                    <p className="font-semibold">
+                      {formatIsraelDate(record.lambedAt)}
+                      {" · "}
+                      {record.bornCount} {t(locale, "lambingBorn")}
+                      {" · "}
+                      {record.aliveCount} {t(locale, "lambingAlive")}
+                    </p>
+                    {record.note ? (
+                      <p className="mt-1 text-[rgba(244,239,230,0.7)]">
+                        {record.note}
+                      </p>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="mt-2 rounded-md border border-white/20 px-2 py-1"
+                      onClick={() => deleteLambing(record)}
+                    >
+                      {t(locale, "deleteLambing")}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <form
+              onSubmit={(e) => addLambing(animal.id, e)}
+              className="grid gap-2 sm:grid-cols-2"
+            >
+              <label className="text-xs">
+                {t(locale, "lambingDate")}
+                <input
+                  type="date"
+                  required
+                  className="shop-field mt-1 w-full rounded-lg px-2 py-1.5 text-xs"
+                  value={draft.lambedAt}
+                  onChange={(e) =>
+                    setLambingDrafts((prev) => ({
+                      ...prev,
+                      [animal.id]: { ...draft, lambedAt: e.target.value },
+                    }))
+                  }
+                />
+              </label>
+              <label className="text-xs">
+                {t(locale, "lambingBorn")}
+                <input
+                  type="number"
+                  min={1}
+                  max={12}
+                  required
+                  className="shop-field mt-1 w-full rounded-lg px-2 py-1.5 text-xs"
+                  value={draft.bornCount}
+                  onChange={(e) =>
+                    setLambingDrafts((prev) => ({
+                      ...prev,
+                      [animal.id]: { ...draft, bornCount: e.target.value },
+                    }))
+                  }
+                />
+              </label>
+              <label className="text-xs">
+                {t(locale, "lambingAlive")}
+                <input
+                  type="number"
+                  min={0}
+                  max={12}
+                  className="shop-field mt-1 w-full rounded-lg px-2 py-1.5 text-xs"
+                  value={draft.aliveCount}
+                  onChange={(e) =>
+                    setLambingDrafts((prev) => ({
+                      ...prev,
+                      [animal.id]: { ...draft, aliveCount: e.target.value },
+                    }))
+                  }
+                />
+              </label>
+              <label className="text-xs sm:col-span-2">
+                {t(locale, "lambingNote")}
+                <input
+                  className="shop-field mt-1 w-full rounded-lg px-2 py-1.5 text-xs"
+                  value={draft.note}
+                  onChange={(e) =>
+                    setLambingDrafts((prev) => ({
+                      ...prev,
+                      [animal.id]: { ...draft, note: e.target.value },
+                    }))
+                  }
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={savingLambingId === animal.id}
+                className="btn-primary w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold sm:col-span-2 sm:w-auto"
+              >
+                {t(locale, "addLambing")}
+              </button>
+            </form>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   function renderAnimalCard(animal: Animal) {
     return (
       <div>
@@ -444,6 +708,9 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
             {t(locale, "deleteAnimal")}
           </button>
         </div>
+        {animal.sex === "FEMALE" ? (
+          <div className="mt-4">{renderLambingHistory(animal)}</div>
+        ) : null}
         <div className="mt-4">
           <p className="text-sm font-semibold">{t(locale, "vaccines")}</p>
           {renderVaccines(animal)}
@@ -724,6 +991,9 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                               {t(locale, "pregnant")}
                             </th>
                             <th className="px-3 py-2 font-semibold">
+                              {t(locale, "lambingHistory")}
+                            </th>
+                            <th className="px-3 py-2 font-semibold">
                               {t(locale, "vaccines")}
                             </th>
                             <th className="px-3 py-2 font-semibold" />
@@ -767,6 +1037,11 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                                 ) : (
                                   "—"
                                 )}
+                              </td>
+                              <td className="px-3 py-3">
+                                {animal.sex === "FEMALE"
+                                  ? renderLambingHistory(animal)
+                                  : "—"}
                               </td>
                               <td className="px-3 py-3">
                                 {renderVaccines(animal)}

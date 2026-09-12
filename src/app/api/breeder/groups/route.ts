@@ -17,6 +17,7 @@ export async function GET(request: Request) {
         orderBy: { number: "asc" },
         include: {
           vaccinations: { orderBy: { validUntil: "asc" } },
+          lambings: { orderBy: { lambedAt: "desc" } },
         },
       },
     },

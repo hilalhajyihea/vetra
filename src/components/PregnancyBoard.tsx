@@ -15,6 +15,8 @@ type FemaleRow = {
   lambingDate: string;
   checkup1Date: string;
   checkup2Date: string;
+  bornCount?: string;
+  aliveCount?: string;
 };
 
 type GroupRow = {
@@ -75,7 +77,10 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
       setAnimalDrafts(
         Object.fromEntries(
           list.flatMap((group) =>
-            group.females.map((animal) => [animal.id, animal]),
+            group.females.map((animal) => [
+              animal.id,
+              { ...animal, bornCount: "1", aliveCount: "" },
+            ]),
           ),
         ),
       );
@@ -125,6 +130,8 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
       lambingDate: string;
       checkup1Date: string;
       checkup2Date: string;
+      bornCount?: string;
+      aliveCount?: string;
     },
   ) {
     setError("");
@@ -136,6 +143,15 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
     });
     setSavingId("");
     if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (data.error === "LAMBING_FUTURE") {
+        setError(t(locale, "errLambingFuture"));
+        return;
+      }
+      if (data.error === "LAMBING_COUNTS") {
+        setError(t(locale, "errLambingCounts"));
+        return;
+      }
       setError(t(locale, "updateFailed"));
       return;
     }
@@ -153,7 +169,11 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
     e.preventDefault();
     const draft = animalDrafts[animalId];
     if (!draft) return;
-    save("animal", animalId, draft);
+    save("animal", animalId, {
+      ...draft,
+      bornCount: draft.bornCount || "1",
+      aliveCount: draft.aliveCount || undefined,
+    });
   }
 
   return (
@@ -316,6 +336,7 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
                       <PregnancyFields
                         locale={locale}
                         value={draft}
+                        showLambingCounts
                         onChange={(next) =>
                           setAnimalDrafts((prev) => ({
                             ...prev,
@@ -350,16 +371,20 @@ type FieldValue = {
   lambingDate: string;
   checkup1Date: string;
   checkup2Date: string;
+  bornCount?: string;
+  aliveCount?: string;
 };
 
 function PregnancyFields({
   locale,
   value,
   onChange,
+  showLambingCounts = false,
 }: {
   locale: Locale;
   value: FieldValue;
   onChange: (next: Partial<FieldValue>) => void;
+  showLambingCounts?: boolean;
 }) {
   return (
     <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -391,6 +416,32 @@ function PregnancyFields({
         value={value.lambingDate}
         onChange={(lambingDate) => onChange({ lambingDate })}
       />
+      {showLambingCounts ? (
+        <>
+          <label className="text-sm">
+            {t(locale, "lambingBorn")}
+            <input
+              type="number"
+              min={1}
+              max={12}
+              className="shop-field mt-1 w-full rounded-xl px-3 py-2 text-sm"
+              value={value.bornCount || "1"}
+              onChange={(e) => onChange({ bornCount: e.target.value })}
+            />
+          </label>
+          <label className="text-sm">
+            {t(locale, "lambingAlive")}
+            <input
+              type="number"
+              min={0}
+              max={12}
+              className="shop-field mt-1 w-full rounded-xl px-3 py-2 text-sm"
+              value={value.aliveCount || ""}
+              onChange={(e) => onChange({ aliveCount: e.target.value })}
+            />
+          </label>
+        </>
+      ) : null}
       <DateField
         label={t(locale, "checkup1Date")}
         value={value.checkup1Date}
