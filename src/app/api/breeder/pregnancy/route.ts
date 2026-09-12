@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { farmIdFromRequest, requireFarmAccess } from "@/lib/breederSession";
 import { dateInputValue, parseOptionalDate } from "@/lib/herd";
-import { upsertAnimalLambing } from "@/lib/lambingStore";
 import { prisma } from "@/lib/prisma";
 
 function serializeFemale(animal: {
@@ -80,8 +79,6 @@ const patchSchema = z.object({
   lambingDate: z.string().optional(),
   checkup1Date: z.string().optional(),
   checkup2Date: z.string().optional(),
-  bornCount: z.coerce.number().int().optional(),
-  aliveCount: z.coerce.number().int().optional(),
 });
 
 function pregnancyData(input: z.infer<typeof patchSchema>) {
@@ -134,19 +131,6 @@ export async function PATCH(request: Request) {
     where: { id: animal.id },
     data: pregnancyData(parsed.data),
   });
-
-  if (parsed.data.lambingDate) {
-    const result = await upsertAnimalLambing({
-      animalId: animal.id,
-      lambedAt: parsed.data.lambingDate,
-      bornCount: parsed.data.bornCount ?? 1,
-      aliveCount: parsed.data.aliveCount,
-      previousLambedAt: dateInputValue(animal.lambingDate),
-    });
-    if ("error" in result) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
-    }
-  }
 
   return NextResponse.json({ animal: serializeFemale(updated) });
 }
