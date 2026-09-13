@@ -10,13 +10,24 @@ import {
 import { prisma } from "@/lib/prisma";
 
 export async function syncLatestLambingDate(animalId: string) {
-  const latest = await prisma.animalLambing.findFirst({
-    where: { animalId },
-    orderBy: { lambedAt: "desc" },
-  });
+  const [latest, animal] = await Promise.all([
+    prisma.animalLambing.findFirst({
+      where: { animalId },
+      orderBy: { lambedAt: "desc" },
+    }),
+    prisma.animal.findUnique({ where: { id: animalId } }),
+  ]);
+  const latestKey = latest ? toDateKey(latest.lambedAt) : "";
+  const matingKey = animal?.matingDate ? toDateKey(animal.matingDate) : "";
+  const endsCurrentPregnancy = Boolean(
+    latestKey && (!matingKey || latestKey >= matingKey),
+  );
   await prisma.animal.update({
     where: { id: animalId },
-    data: { lambingDate: latest?.lambedAt ?? null },
+    data: {
+      lambingDate: latest?.lambedAt ?? null,
+      ...(endsCurrentPregnancy ? { pregnant: false } : {}),
+    },
   });
 }
 

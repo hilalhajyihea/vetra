@@ -12,7 +12,6 @@ type FemaleRow = {
   spongeDate: string;
   hormoneDate: string;
   matingDate: string;
-  lambingDate: string;
   checkup1Date: string;
   checkup2Date: string;
 };
@@ -24,7 +23,6 @@ type GroupRow = {
   spongeDate: string;
   hormoneDate: string;
   matingDate: string;
-  lambingDate: string;
   checkup1Date: string;
   checkup2Date: string;
   females: FemaleRow[];
@@ -122,7 +120,6 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
       spongeDate: string;
       hormoneDate: string;
       matingDate: string;
-      lambingDate: string;
       checkup1Date: string;
       checkup2Date: string;
     },
@@ -347,7 +344,6 @@ type FieldValue = {
   spongeDate: string;
   hormoneDate: string;
   matingDate: string;
-  lambingDate: string;
   checkup1Date: string;
   checkup2Date: string;
 };
@@ -385,11 +381,6 @@ function PregnancyFields({
         label={t(locale, "matingDate")}
         value={value.matingDate}
         onChange={(matingDate) => onChange({ matingDate })}
-      />
-      <DateField
-        label={t(locale, "lambingDate")}
-        value={value.lambingDate}
-        onChange={(lambingDate) => onChange({ lambingDate })}
       />
       <DateField
         label={t(locale, "checkup1Date")}

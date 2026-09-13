@@ -11,7 +11,6 @@ function serializeFemale(animal: {
   spongeDate: Date | null;
   hormoneDate: Date | null;
   matingDate: Date | null;
-  lambingDate: Date | null;
   checkup1Date: Date | null;
   checkup2Date: Date | null;
 }) {
@@ -22,7 +21,6 @@ function serializeFemale(animal: {
     spongeDate: dateInputValue(animal.spongeDate),
     hormoneDate: dateInputValue(animal.hormoneDate),
     matingDate: dateInputValue(animal.matingDate),
-    lambingDate: dateInputValue(animal.lambingDate),
     checkup1Date: dateInputValue(animal.checkup1Date),
     checkup2Date: dateInputValue(animal.checkup2Date),
   };
@@ -60,7 +58,6 @@ export async function GET(request: Request) {
         spongeDate: sharedValue(females.map((animal) => animal.spongeDate)),
         hormoneDate: sharedValue(females.map((animal) => animal.hormoneDate)),
         matingDate: sharedValue(females.map((animal) => animal.matingDate)),
-        lambingDate: sharedValue(females.map((animal) => animal.lambingDate)),
         checkup1Date: sharedValue(females.map((animal) => animal.checkup1Date)),
         checkup2Date: sharedValue(females.map((animal) => animal.checkup2Date)),
         females,
@@ -76,7 +73,6 @@ const patchSchema = z.object({
   spongeDate: z.string().optional(),
   hormoneDate: z.string().optional(),
   matingDate: z.string().optional(),
-  lambingDate: z.string().optional(),
   checkup1Date: z.string().optional(),
   checkup2Date: z.string().optional(),
 });
@@ -87,7 +83,6 @@ function pregnancyData(input: z.infer<typeof patchSchema>) {
     spongeDate: parseOptionalDate(input.spongeDate),
     hormoneDate: parseOptionalDate(input.hormoneDate),
     matingDate: parseOptionalDate(input.matingDate),
-    lambingDate: parseOptionalDate(input.lambingDate),
     checkup1Date: parseOptionalDate(input.checkup1Date),
     checkup2Date: parseOptionalDate(input.checkup2Date),
   };
