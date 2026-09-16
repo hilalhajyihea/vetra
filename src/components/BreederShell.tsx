@@ -11,6 +11,7 @@ import { t, type Locale, type MsgKey } from "@/lib/i18n";
 const NAV: { segment: string; key: MsgKey }[] = [
   { segment: "vaccinations", key: "navVaccinations" },
   { segment: "pregnancy", key: "navPregnancy" },
+  { segment: "treatments", key: "navTreatments" },
   { segment: "calendar", key: "navCalendar" },
   { segment: "herd", key: "navHerd" },
   { segment: "book", key: "navBook" },

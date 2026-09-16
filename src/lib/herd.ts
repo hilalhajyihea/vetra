@@ -55,6 +55,24 @@ export function formatIsraelDate(value: Date | string) {
   return `${Number(day)}.${Number(month)}.${year}`;
 }
 
+export function formatIsraelDateTime(value: Date | string) {
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return formatIsraelDate(value);
+  const datePart = date.toLocaleDateString("en-GB", {
+    timeZone: "Asia/Jerusalem",
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+  });
+  const timePart = date.toLocaleTimeString("en-GB", {
+    timeZone: "Asia/Jerusalem",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  return `${datePart} ${timePart}`;
+}
+
 export type VaccineStatus = "valid" | "expired" | "none";
 
 export function summarizeVaccineDates(dates: Array<Date | string>): {
