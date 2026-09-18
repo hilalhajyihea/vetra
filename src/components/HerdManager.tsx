@@ -57,6 +57,12 @@ function lambingRatio(animal: Animal) {
   return summarizeLambings((animal.lambings || []).map(serializeLambing)).perYear;
 }
 
+function geneRank(animal: Animal) {
+  const gene = animal.geneType || "";
+  const index = GENE_TYPES.indexOf(gene as GeneType);
+  return index === -1 ? GENE_TYPES.length : index;
+}
+
 type VaccineType = {
   id: string;
   name: string;
@@ -82,7 +88,7 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sortMode, setSortMode] = useState<
-    "group" | "number" | "age" | "pregnant" | "lambing"
+    "group" | "number" | "age" | "pregnant" | "lambing" | "gene"
   >("group");
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -167,6 +173,12 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
       rows.sort(
         (a, b) =>
           lambingRatio(b) - lambingRatio(a) ||
+          compareAnimalNumber(a.number, b.number),
+      );
+    } else if (sortMode === "gene") {
+      rows.sort(
+        (a, b) =>
+          geneRank(a) - geneRank(b) ||
           compareAnimalNumber(a.number, b.number),
       );
     } else {
@@ -994,6 +1006,20 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                 }`}
               >
                 {t(locale, "sortByLambing")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSortMode("gene");
+                  setSelectedGroupId(null);
+                }}
+                className={`rounded-xl px-4 py-2 text-sm font-semibold ${
+                  sortMode === "gene"
+                    ? "bg-[var(--teal)] text-[var(--cream)]"
+                    : "border border-white/20"
+                }`}
+              >
+                {t(locale, "sortByGene")}
               </button>
             </div>
 
