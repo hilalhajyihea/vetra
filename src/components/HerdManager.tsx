@@ -6,9 +6,12 @@ import { useUiLocale } from "@/components/LocaleProvider";
 import {
   formatAge,
   formatIsraelDate,
+  GENE_TYPES,
+  isGeneType,
   isVaccineValid,
   jerusalemTodayKey,
   toDateKey,
+  type GeneType,
 } from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
 import {
@@ -30,6 +33,7 @@ type Animal = {
   id: string;
   number: string;
   sex: string;
+  geneType?: string;
   birthDate: string;
   pregnant: boolean;
   vaccinations: Vaccine[];
@@ -85,6 +89,7 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
   const [groupName, setGroupName] = useState("");
   const [number, setNumber] = useState("");
   const [sex, setSex] = useState<"MALE" | "FEMALE">("FEMALE");
+  const [geneType, setGeneType] = useState<"" | GeneType>("");
   const [birthDate, setBirthDate] = useState("");
   const [pregnant, setPregnant] = useState(false);
   const [groupId, setGroupId] = useState("");
@@ -198,6 +203,10 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
       setError(t(locale, "needGroupFirst"));
       return;
     }
+    if (!isGeneType(geneType)) {
+      setError(t(locale, "geneTypeChoose"));
+      return;
+    }
     const res = await fetch("/api/breeder/animals", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -205,6 +214,7 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
         groupId,
         number,
         sex,
+        geneType,
         birthDate,
         pregnant: sex === "FEMALE" ? pregnant : false,
         farmId,
@@ -224,7 +234,22 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
       return;
     }
     setNumber("");
+    setGeneType("");
     setPregnant(false);
+    load();
+  }
+
+  async function setAnimalGeneType(animal: Animal, next: GeneType) {
+    setError("");
+    const res = await fetch("/api/breeder/animals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: animal.id, geneType: next, farmId }),
+    });
+    if (!res.ok) {
+      setError(t(locale, "updateFailed"));
+      return;
+    }
     load();
   }
 
@@ -721,6 +746,28 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
               {" · "}
               {t(locale, "age")}: {formatAge(locale, animal.birthDate)}
             </p>
+            <label className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+              {t(locale, "geneType")}
+              <select
+                className="shop-field rounded-lg px-2 py-1.5 text-sm"
+                value={isGeneType(animal.geneType || "") ? animal.geneType : ""}
+                onChange={(e) => {
+                  if (isGeneType(e.target.value)) {
+                    setAnimalGeneType(animal, e.target.value);
+                  }
+                }}
+                required
+              >
+                <option value="" disabled>
+                  {t(locale, "geneTypeChoose")}
+                </option>
+                {GENE_TYPES.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </label>
             {animal.sex === "FEMALE" ? (
               <label className="mt-2 flex items-center gap-2 text-sm">
                 <input
@@ -811,6 +858,27 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                 <option value="FEMALE">{t(locale, "sexFemale")}</option>
                 <option value="MALE">{t(locale, "sexMale")}</option>
               </select>
+              <label className="text-sm">
+                {t(locale, "geneType")}
+                <select
+                  className="shop-field mt-1 w-full rounded-xl px-3 py-2.5"
+                  value={geneType}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setGeneType(isGeneType(next) ? next : "");
+                  }}
+                  required
+                >
+                  <option value="" disabled>
+                    {t(locale, "geneTypeChoose")}
+                  </option>
+                  {GENE_TYPES.map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <label className="text-sm">
                 {t(locale, "birthDate")}
                 <input
@@ -1056,6 +1124,9 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                               {t(locale, "sex")}
                             </th>
                             <th className="px-3 py-2 font-semibold">
+                              {t(locale, "geneType")}
+                            </th>
+                            <th className="px-3 py-2 font-semibold">
                               {t(locale, "age")}
                             </th>
                             <th className="px-3 py-2 font-semibold">
@@ -1087,6 +1158,31 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                                 {animal.sex === "FEMALE"
                                   ? t(locale, "sexFemale")
                                   : t(locale, "sexMale")}
+                              </td>
+                              <td className="px-3 py-3 whitespace-nowrap">
+                                <select
+                                  className="shop-field rounded-lg px-2 py-1.5 text-sm"
+                                  value={
+                                    isGeneType(animal.geneType || "")
+                                      ? animal.geneType
+                                      : ""
+                                  }
+                                  onChange={(e) => {
+                                    if (isGeneType(e.target.value)) {
+                                      setAnimalGeneType(animal, e.target.value);
+                                    }
+                                  }}
+                                  required
+                                >
+                                  <option value="" disabled>
+                                    {t(locale, "geneTypeChoose")}
+                                  </option>
+                                  {GENE_TYPES.map((value) => (
+                                    <option key={value} value={value}>
+                                      {value}
+                                    </option>
+                                  ))}
+                                </select>
                               </td>
                               <td className="px-3 py-3 whitespace-nowrap">
                                 {formatAge(locale, animal.birthDate)}

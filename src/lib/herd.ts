@@ -1,5 +1,12 @@
 import type { Locale } from "@/lib/i18n";
 
+export const GENE_TYPES = ["++", "p+", "pp"] as const;
+export type GeneType = (typeof GENE_TYPES)[number];
+
+export function isGeneType(value: string): value is GeneType {
+  return (GENE_TYPES as readonly string[]).includes(value);
+}
+
 export const VACCINE_SUGGESTIONS = [
   "פה וטלפיים",
   "דבר הבקר",

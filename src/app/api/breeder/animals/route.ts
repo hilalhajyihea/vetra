@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { farmIdFromRequest, requireFarmAccess } from "@/lib/breederSession";
-import { jerusalemTodayKey, toDateKey } from "@/lib/herd";
+import { GENE_TYPES, jerusalemTodayKey, toDateKey } from "@/lib/herd";
 import { prisma } from "@/lib/prisma";
 
 const createSchema = z.object({
   groupId: z.string().min(1),
   number: z.string().min(1).max(40),
   sex: z.enum(["MALE", "FEMALE"]),
+  geneType: z.enum(GENE_TYPES),
   birthDate: z.string().min(8),
   pregnant: z.boolean().optional(),
 });
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
       groupId: group.id,
       number,
       sex: parsed.data.sex,
+      geneType: parsed.data.geneType,
       birthDate: new Date(`${birthKey}T00:00:00.000Z`),
       pregnant: parsed.data.sex === "FEMALE" ? Boolean(parsed.data.pregnant) : false,
     },
@@ -66,6 +68,7 @@ export async function POST(request: Request) {
 const patchSchema = z.object({
   id: z.string().min(1),
   pregnant: z.boolean().optional(),
+  geneType: z.enum(GENE_TYPES).optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -93,8 +96,13 @@ export async function PATCH(request: Request) {
   const updated = await prisma.animal.update({
     where: { id: animal.id },
     data: {
-      pregnant:
-        animal.sex === "FEMALE" ? Boolean(parsed.data.pregnant) : false,
+      ...(parsed.data.pregnant !== undefined
+        ? {
+            pregnant:
+              animal.sex === "FEMALE" ? Boolean(parsed.data.pregnant) : false,
+          }
+        : {}),
+      ...(parsed.data.geneType ? { geneType: parsed.data.geneType } : {}),
     },
   });
 

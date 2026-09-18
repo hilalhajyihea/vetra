@@ -81,6 +81,8 @@ model Animal {
   number    String
   /// MALE | FEMALE
   sex       String
+  /// ++ | p+ | pp
+  geneType  String   @default("")
   birthDate DateTime @db.Date
   pregnant  Boolean  @default(false)
   spongeDate     DateTime? @db.Date
