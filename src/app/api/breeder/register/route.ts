@@ -10,7 +10,7 @@ const schema = z.object({
   lastName: z.string().min(2).max(60),
   farmName: z.string().min(2).max(80),
   phone: z.string().min(8).max(20),
-  email: z.string().email().max(120),
+  email: z.union([z.literal(""), z.string().email().max(120)]).optional(),
   password: z.string().min(6).max(100),
 });
 

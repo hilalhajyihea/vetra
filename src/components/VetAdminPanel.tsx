@@ -160,7 +160,8 @@ export function VetAdminPanel({
                   {b.firstName} {b.lastName}
                 </p>
                 <p className="text-sm text-[rgba(244,239,230,0.62)]">
-                  {b.farmName} · {b.phone} · {b.email}
+                  {b.farmName} · {b.phone}
+                  {b.email ? ` · ${b.email}` : ""}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
@@ -204,7 +205,8 @@ export function VetAdminPanel({
                     {b.firstName} {b.lastName}
                   </p>
                   <p className="text-sm text-[rgba(244,239,230,0.62)]">
-                    {b.farmName} · {b.phone} · {b.email}
+                    {b.farmName} · {b.phone}
+                  {b.email ? ` · ${b.email}` : ""}
                   </p>
                   <p className="mt-2 text-sm font-semibold text-[var(--hay)]">
                     {t(locale, "openFarm")}

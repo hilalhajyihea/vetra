@@ -140,7 +140,6 @@ export function BreederRegisterForm({ slug, clinicLabel, locale: localeProp }: P
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
-                required
               />
             </label>
             <label className="text-sm font-medium text-[var(--cream)]">

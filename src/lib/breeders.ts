@@ -8,7 +8,8 @@ export async function registerBreeder(input: {
   lastName: string;
   farmName: string;
   phone: string;
-  email: string;
+  email?: string;
+
   password: string;
 }) {
   const vet = await prisma.veterinarian.findUnique({
@@ -44,7 +45,7 @@ export async function registerBreeder(input: {
       lastName: input.lastName.trim(),
       farmName: input.farmName.trim(),
       phone,
-      email: input.email.trim().toLowerCase(),
+      email: (input.email || "").trim().toLowerCase(),
       passwordHash,
       status: "PENDING",
     },

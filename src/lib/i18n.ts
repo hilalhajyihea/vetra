@@ -174,7 +174,7 @@ const he = {
   firstName: "שם מגדל",
   lastName: "שם משפחה",
   farmName: "שם בית גידול",
-  email: "מייל",
+  email: "מייל (לא חובה)",
   registerSubmit: "שליחת הרשמה",
   registerSaving: "שולח...",
   registerSuccess:
@@ -631,7 +631,7 @@ const ar: { [K in keyof typeof he]: string } = {
   firstName: "اسم المربّي",
   lastName: "اسم العائلة",
   farmName: "اسم بيت التربية",
-  email: "البريد الإلكتروني",
+  email: "البريد الإلكتروني (اختياري)",
   registerSubmit: "إرسال التسجيل",
   registerSaving: "جاري الإرسال...",
   registerSuccess:
