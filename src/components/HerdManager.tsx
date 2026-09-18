@@ -8,6 +8,7 @@ import {
   formatIsraelDate,
   isVaccineValid,
   jerusalemTodayKey,
+  toDateKey,
 } from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
 import {
@@ -47,6 +48,11 @@ function compareAnimalNumber(a: string, b: string) {
   return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
 }
 
+function lambingRatio(animal: Animal) {
+  if (animal.sex !== "FEMALE") return -1;
+  return summarizeLambings((animal.lambings || []).map(serializeLambing)).perYear;
+}
+
 type VaccineType = {
   id: string;
   name: string;
@@ -71,7 +77,9 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [sortMode, setSortMode] = useState<"group" | "number">("group");
+  const [sortMode, setSortMode] = useState<
+    "group" | "number" | "age" | "pregnant" | "lambing"
+  >("group");
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [groupName, setGroupName] = useState("");
@@ -134,9 +142,33 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
 
   const filteredAnimals = useMemo(() => {
     const q = search.trim();
-    if (!q) return allAnimals;
-    return allAnimals.filter((animal) => animal.number.includes(q));
-  }, [allAnimals, search]);
+    const rows = (q
+      ? allAnimals.filter((animal) => animal.number.includes(q))
+      : allAnimals
+    ).slice();
+    if (sortMode === "age") {
+      rows.sort(
+        (a, b) =>
+          toDateKey(a.birthDate).localeCompare(toDateKey(b.birthDate)) ||
+          compareAnimalNumber(a.number, b.number),
+      );
+    } else if (sortMode === "pregnant") {
+      rows.sort((a, b) => {
+        const aPregnant = a.sex === "FEMALE" && a.pregnant ? 1 : 0;
+        const bPregnant = b.sex === "FEMALE" && b.pregnant ? 1 : 0;
+        return bPregnant - aPregnant || compareAnimalNumber(a.number, b.number);
+      });
+    } else if (sortMode === "lambing") {
+      rows.sort(
+        (a, b) =>
+          lambingRatio(b) - lambingRatio(a) ||
+          compareAnimalNumber(a.number, b.number),
+      );
+    } else {
+      rows.sort((a, b) => compareAnimalNumber(a.number, b.number));
+    }
+    return rows;
+  }, [allAnimals, search, sortMode]);
 
   const selectedGroup =
     groups.find((group) => group.id === selectedGroupId) || null;
@@ -852,6 +884,48 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                 }`}
               >
                 {t(locale, "sortByNumber")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSortMode("age");
+                  setSelectedGroupId(null);
+                }}
+                className={`rounded-xl px-4 py-2 text-sm font-semibold ${
+                  sortMode === "age"
+                    ? "bg-[var(--teal)] text-[var(--cream)]"
+                    : "border border-white/20"
+                }`}
+              >
+                {t(locale, "sortByAge")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSortMode("pregnant");
+                  setSelectedGroupId(null);
+                }}
+                className={`rounded-xl px-4 py-2 text-sm font-semibold ${
+                  sortMode === "pregnant"
+                    ? "bg-[var(--teal)] text-[var(--cream)]"
+                    : "border border-white/20"
+                }`}
+              >
+                {t(locale, "sortByPregnant")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSortMode("lambing");
+                  setSelectedGroupId(null);
+                }}
+                className={`rounded-xl px-4 py-2 text-sm font-semibold ${
+                  sortMode === "lambing"
+                    ? "bg-[var(--teal)] text-[var(--cream)]"
+                    : "border border-white/20"
+                }`}
+              >
+                {t(locale, "sortByLambing")}
               </button>
             </div>
 
