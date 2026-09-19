@@ -18,6 +18,28 @@ export function isGeneType(value: string): value is GeneType {
   return (GENE_TYPES as readonly string[]).includes(value);
 }
 
+export function parseAnimalNumbers(raw: string) {
+  return [
+    ...new Set(
+      raw
+        .split(/[\s,;،]+/u)
+        .map((value) => value.trim())
+        .filter(Boolean),
+    ),
+  ];
+}
+
+export function animalNumbersMatch(a: string, b: string) {
+  const left = a.trim();
+  const right = b.trim();
+  if (!left || !right) return false;
+  if (left === right) return true;
+  if (/^\d+$/.test(left) && /^\d+$/.test(right)) {
+    return Number(left) === Number(right);
+  }
+  return false;
+}
+
 export const VACCINE_SUGGESTIONS = [
   "פה וטלפיים",
   "דבר הבקר",

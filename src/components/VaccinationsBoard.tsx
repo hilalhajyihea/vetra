@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUiLocale } from "@/components/LocaleProvider";
-import { formatIsraelDate, formatVaccineUntil, isLifetimeValidUntil, jerusalemTodayKey } from "@/lib/herd";
+import { formatIsraelDate, formatVaccineUntil, isLifetimeValidUntil, jerusalemTodayKey, parseAnimalNumbers } from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
 
 type VaccineStatus = "valid" | "expired" | "none";
@@ -82,6 +82,9 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
   const [search, setSearch] = useState("");
   const [givenDrafts, setGivenDrafts] = useState<Record<string, string>>({});
   const [savingId, setSavingId] = useState("");
+  const [bulkNumbers, setBulkNumbers] = useState("");
+  const [bulkGivenAt, setBulkGivenAt] = useState("");
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true);
@@ -174,6 +177,46 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
     }
   }
 
+  async function bulkVaccinate() {
+    if (!selected) return;
+    const numbers = parseAnimalNumbers(bulkNumbers);
+    if (numbers.length === 0) {
+      setError(t(locale, "vaccineBulkEmpty"));
+      return;
+    }
+    setError("");
+    setBulkSaving(true);
+    try {
+      const res = await fetch("/api/breeder/vaccinations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          numbers,
+          vaccineTypeId: selected.id,
+          givenAt: bulkGivenAt || today,
+          farmId,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(t(locale, "updateFailed"));
+        return;
+      }
+      const missing: string[] = data.missing || [];
+      if (missing.length) {
+        setBulkNumbers(missing.join(", "));
+        setError(t(locale, "vaccineBulkMissing", { numbers: missing.join(", ") }));
+      } else {
+        setBulkNumbers("");
+      }
+      await load({ silent: true });
+    } catch {
+      setError(t(locale, "updateFailed"));
+    } finally {
+      setBulkSaving(false);
+    }
+  }
+
   function renewControls(animal: AnimalRow) {
     return (
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
@@ -201,6 +244,51 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
               : t(locale, "addVaccine")}
         </button>
       </div>
+    );
+  }
+
+  function renderBulkVaccinate() {
+    return (
+      <form
+        className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          bulkVaccinate();
+        }}
+      >
+        <p className="text-sm font-semibold">{t(locale, "vaccineBulkTitle")}</p>
+        <p className="mt-1 text-xs text-[rgba(244,239,230,0.62)]">
+          {t(locale, "vaccineBulkLead")}
+        </p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-[auto_1fr_auto] sm:items-end">
+          <label className="text-xs">
+            {t(locale, "vaccineGiven")}
+            <input
+              type="date"
+              className="shop-field mt-1 w-full rounded-lg px-2 py-1.5 text-sm"
+              value={bulkGivenAt || today}
+              onChange={(e) => setBulkGivenAt(e.target.value)}
+              required
+            />
+          </label>
+          <label className="text-xs sm:min-w-0">
+            {t(locale, "animalNumber")}
+            <input
+              className="shop-field mt-1 w-full rounded-lg px-3 py-1.5 text-sm"
+              placeholder={t(locale, "vaccineBulkPlaceholder")}
+              value={bulkNumbers}
+              onChange={(e) => setBulkNumbers(e.target.value)}
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={bulkSaving}
+            className="btn-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+          >
+            {bulkSaving ? t(locale, "renewingVaccine") : t(locale, "vaccineBulkConfirm")}
+          </button>
+        </div>
+      </form>
     );
   }
 
@@ -364,6 +452,9 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
                   setSortMode("group");
                   setSearch("");
                   setOpenInfo(null);
+                  setBulkNumbers("");
+                  setBulkGivenAt("");
+                  setError("");
                 }}
                 className={`w-full rounded-2xl border px-4 py-4 text-right transition ${groupStatusClass(vaccine.status)}`}
               >
@@ -468,6 +559,7 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               ) : null}
+              {renderBulkVaccinate()}
               {renderAnimalList(sortMode === "number")}
             </div>
           )}
