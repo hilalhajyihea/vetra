@@ -76,7 +76,7 @@ export function parseOptionalDate(value: string | null | undefined) {
   return new Date(`${toDateKey(value)}T00:00:00.000Z`);
 }
 
-export function addDaysToDateKey(dateKey: string, days: number) {
+export function addDaysToDateKey(dateKey: Date | string, days: number) {
   const [year, month, day] = toDateKey(dateKey).split("-").map(Number);
   const result = new Date(Date.UTC(year, month - 1, day + days));
   return result.toISOString().slice(0, 10);
@@ -141,7 +141,7 @@ export function rescheduleExistingVaccination(
 ) {
   if (!record.givenAt) return null;
   if (record.courseStage === "PRIME" && usesBoosterProtocol(type)) {
-    const due = addDaysToDateKey(record.givenAt, type.boosterAfterDays);
+    const due = addDaysToDateKey(toDateKey(record.givenAt), type.boosterAfterDays);
     return {
       courseStage: "PRIME" as const,
       boosterDueAt: dateFromKey(due),
