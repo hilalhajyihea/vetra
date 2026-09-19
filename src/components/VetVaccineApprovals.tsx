@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUiLocale } from "@/components/LocaleProvider";
-import { formatIsraelDate } from "@/lib/herd";
+import { formatIsraelDate, formatVaccineUntil } from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
 
 type PendingVaccine = {
@@ -196,7 +196,7 @@ export function VetVaccineApprovals({ locale: localeProp }: { locale: Locale }) 
                             ) : null}
                             {" · "}
                             {t(locale, "vaccineUntil")}:{" "}
-                            {formatIsraelDate(vaccine.validUntil)}
+                            {formatVaccineUntil(locale, vaccine.validUntil)}
                             {" · "}
                             {t(locale, "vaccinePending")}
                           </span>

@@ -1,4 +1,15 @@
-import type { Locale } from "@/lib/i18n";
+import { t, type Locale } from "@/lib/i18n";
+
+export const VACCINE_LIFETIME_UNTIL = "9999-12-31";
+
+export function isLifetimeVaccineMonths(months: number) {
+  return months <= 0;
+}
+
+export function isLifetimeValidUntil(value: Date | string | null | undefined) {
+  if (!value) return false;
+  return toDateKey(value) >= "9000-01-01";
+}
 
 export const GENE_TYPES = ["++", "p+", "pp"] as const;
 export type GeneType = (typeof GENE_TYPES)[number];
@@ -53,7 +64,17 @@ export function addMonthsToDateKey(dateKey: string, months: number) {
 }
 
 export function validUntilFromGiven(givenAt: Date | string, months: number) {
+  if (isLifetimeVaccineMonths(months)) return VACCINE_LIFETIME_UNTIL;
   return addMonthsToDateKey(toDateKey(givenAt), months);
+}
+
+export function formatVaccineUntil(
+  locale: Locale,
+  value: Date | string | null | undefined,
+) {
+  if (!value) return "";
+  if (isLifetimeValidUntil(value)) return t(locale, "vaccineLifetimeUntil");
+  return formatIsraelDate(value);
 }
 
 export function formatIsraelDate(value: Date | string) {

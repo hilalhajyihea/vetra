@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { farmIdFromRequest, requireFarmAccess } from "@/lib/breederSession";
-import { toDateKey } from "@/lib/herd";
+import { isLifetimeValidUntil, toDateKey } from "@/lib/herd";
 import { prisma } from "@/lib/prisma";
 
 type EventKind =
@@ -77,11 +77,13 @@ export async function GET(request: Request) {
         groupName,
         name: vaccine.name,
       });
-      pushEvent(events, vaccine.validUntil, "vaccine", {
-        animalNumber: animal.number,
-        groupName,
-        name: vaccine.name,
-      });
+      if (!isLifetimeValidUntil(vaccine.validUntil)) {
+        pushEvent(events, vaccine.validUntil, "vaccine", {
+          animalNumber: animal.number,
+          groupName,
+          name: vaccine.name,
+        });
+      }
     }
     pushEvent(events, animal.spongeDate, "sponge", {
       animalNumber: animal.number,

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUiLocale } from "@/components/LocaleProvider";
-import { formatIsraelDate, jerusalemTodayKey } from "@/lib/herd";
+import { formatIsraelDate, formatVaccineUntil, isLifetimeValidUntil, jerusalemTodayKey } from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
 
 type VaccineStatus = "valid" | "expired" | "none";
@@ -130,6 +130,9 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
 
   function statusLabel(status: VaccineStatus, date: string | null) {
     if (status === "none" || !date) return t(locale, "noVaccineRecords");
+    if (status === "valid" && isLifetimeValidUntil(date)) {
+      return t(locale, "vaccineLifetimeUntil");
+    }
     return status === "valid"
       ? t(locale, "vaccineValidUntil", { date: formatIsraelDate(date) })
       : t(locale, "vaccineExpiredOn", { date: formatIsraelDate(date) });
@@ -238,7 +241,7 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
                   <dt className="opacity-70">{t(locale, "vaccineUntil")}</dt>
                   <dd>
                     {animal.validUntil
-                      ? formatIsraelDate(animal.validUntil)
+                      ? formatVaccineUntil(locale, animal.validUntil)
                       : "—"}
                   </dd>
                 </div>
@@ -291,7 +294,7 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
                   </td>
                   <td className="px-3 py-2">
                     {animal.validUntil
-                      ? formatIsraelDate(animal.validUntil)
+                      ? formatVaccineUntil(locale, animal.validUntil)
                       : "—"}
                   </td>
                   <td className="px-3 py-2 font-semibold">

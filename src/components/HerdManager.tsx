@@ -6,8 +6,10 @@ import { useUiLocale } from "@/components/LocaleProvider";
 import {
   formatAge,
   formatIsraelDate,
+  formatVaccineUntil,
   GENE_TYPES,
   isGeneType,
+  isLifetimeVaccineMonths,
   isVaccineValid,
   jerusalemTodayKey,
   toDateKey,
@@ -494,7 +496,7 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                 <span>
                   {v.name}
                   {v.givenAt ? ` · ${formatIsraelDate(v.givenAt)}` : ""}
-                  {` · ${formatIsraelDate(v.validUntil)}`}
+                  {` · ${formatVaccineUntil(locale, v.validUntil)}`}
                   {` · ${
                     pending
                       ? t(locale, "vaccinePending")
@@ -550,9 +552,9 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
               {vaccineTypes.map((type) => (
                 <option key={type.id} value={type.id}>
                   {type.name}
-                  {type.validMonths
-                    ? ` (${type.validMonths} ${t(locale, "vaccineMonthsUnit")})`
-                    : ""}
+                  {isLifetimeVaccineMonths(type.validMonths ?? 1)
+                    ? ` (${t(locale, "vaccineLifetime")})`
+                    : ` (${type.validMonths} ${t(locale, "vaccineMonthsUnit")})`}
                 </option>
               ))}
             </select>

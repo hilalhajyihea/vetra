@@ -141,7 +141,7 @@ model VaccineType {
   veterinarianId String
   name           String
   description    String   @default("")
-  /// How many months the vaccine stays valid after it is given
+  /// Months of validity after it is given. 0 = one-time / never expires
   validMonths    Int      @default(12)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

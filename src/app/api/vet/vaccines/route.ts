@@ -21,7 +21,7 @@ export async function GET() {
 const createSchema = z.object({
   name: z.string().min(1).max(80),
   description: z.string().max(800).optional(),
-  validMonths: z.number().int().min(1).max(60),
+  validMonths: z.number().int().min(0).max(60),
 });
 
 export async function POST(request: Request) {
@@ -64,7 +64,7 @@ const patchSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(80).optional(),
   description: z.string().max(800).optional(),
-  validMonths: z.number().int().min(1).max(60).optional(),
+  validMonths: z.number().int().min(0).max(60).optional(),
 });
 
 export async function PATCH(request: Request) {
