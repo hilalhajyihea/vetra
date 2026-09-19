@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 type EventKind =
   | "vaccine"
   | "vaccineGiven"
+  | "vaccineBooster"
   | "sponge"
   | "hormone"
   | "mating"
@@ -77,7 +78,13 @@ export async function GET(request: Request) {
         groupName,
         name: vaccine.name,
       });
-      if (!isLifetimeValidUntil(vaccine.validUntil)) {
+      if (vaccine.courseStage === "PRIME") {
+        pushEvent(events, vaccine.boosterDueAt || vaccine.validUntil, "vaccineBooster", {
+          animalNumber: animal.number,
+          groupName,
+          name: vaccine.name,
+        });
+      } else if (!isLifetimeValidUntil(vaccine.validUntil)) {
         pushEvent(events, vaccine.validUntil, "vaccine", {
           animalNumber: animal.number,
           groupName,

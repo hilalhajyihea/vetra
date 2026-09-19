@@ -6,7 +6,7 @@ import { useUiLocale } from "@/components/LocaleProvider";
 import { formatIsraelDate, formatVaccineUntil, isLifetimeValidUntil, jerusalemTodayKey, parseAnimalNumbers } from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
 
-type VaccineStatus = "valid" | "expired" | "none";
+type VaccineStatus = "valid" | "expired" | "booster" | "none";
 
 type GroupRow = {
   id: string;
@@ -23,7 +23,11 @@ type AnimalRow = {
   groupName: string;
   givenAt: string | null;
   validUntil: string | null;
+  boosterDueAt?: string | null;
+  courseStage?: string | null;
   valid: boolean;
+  needsBooster?: boolean;
+  boardStatus?: VaccineStatus;
   pending: boolean;
 };
 
@@ -48,14 +52,17 @@ function withFarm(path: string, farmId?: string) {
   return `${path}?farmId=${encodeURIComponent(farmId)}`;
 }
 
-function statusClass(animal: Pick<AnimalRow, "valid" | "pending" | "validUntil">) {
+function statusClass(animal: Pick<AnimalRow, "valid" | "pending" | "validUntil" | "boardStatus" | "needsBooster">) {
   if (animal.pending) {
     return "border-amber-500/40 bg-amber-950/70 text-[var(--hay)]";
   }
-  if (!animal.validUntil) {
+  if (animal.boardStatus === "booster" || animal.needsBooster && animal.boardStatus !== "expired") {
+    return "border-amber-500/40 bg-amber-950/70 text-[var(--hay)]";
+  }
+  if (!animal.validUntil || animal.boardStatus === "none") {
     return "border-white/15 bg-black/20 text-[rgba(244,239,230,0.78)]";
   }
-  return animal.valid
+  return animal.valid || animal.boardStatus === "valid"
     ? "border-emerald-500/40 bg-emerald-950/70 text-emerald-100"
     : "border-red-500/40 bg-red-950/70 text-red-100";
 }
@@ -63,6 +70,9 @@ function statusClass(animal: Pick<AnimalRow, "valid" | "pending" | "validUntil">
 function groupStatusClass(status: VaccineStatus) {
   if (status === "none") {
     return "border-white/15 bg-black/20 text-[rgba(244,239,230,0.78)]";
+  }
+  if (status === "booster") {
+    return "border-amber-500/40 bg-amber-950/70 text-[var(--hay)]";
   }
   return status === "valid"
     ? "border-emerald-500/40 bg-emerald-950/70 text-emerald-100"
@@ -136,6 +146,9 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
     if (status === "valid" && isLifetimeValidUntil(date)) {
       return t(locale, "vaccineLifetimeUntil");
     }
+    if (status === "booster") {
+      return t(locale, "vaccineBoosterDue", { date: formatIsraelDate(date) });
+    }
     return status === "valid"
       ? t(locale, "vaccineValidUntil", { date: formatIsraelDate(date) })
       : t(locale, "vaccineExpiredOn", { date: formatIsraelDate(date) });
@@ -144,6 +157,13 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
   function animalStatusLabel(animal: AnimalRow) {
     if (animal.pending) return t(locale, "vaccinePending");
     if (!animal.validUntil) return t(locale, "vaccineNotGiven");
+    const due = animal.boosterDueAt || animal.validUntil;
+    if (animal.boardStatus === "booster" || (animal.needsBooster && animal.boardStatus !== "expired")) {
+      return t(locale, "vaccineBoosterUntil", { date: formatIsraelDate(due) });
+    }
+    if (animal.needsBooster && animal.boardStatus === "expired") {
+      return t(locale, "vaccineBoosterOverdue", { date: formatIsraelDate(due) });
+    }
     return animal.valid
       ? t(locale, "vaccineValid")
       : t(locale, "vaccineExpired");
@@ -239,9 +259,11 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
         >
           {savingId === animal.id
             ? t(locale, "renewingVaccine")
-            : animal.validUntil
-              ? t(locale, "renewVaccine")
-              : t(locale, "addVaccine")}
+            : animal.needsBooster
+              ? t(locale, "vaccineBoosterAction")
+              : animal.validUntil
+                ? t(locale, "renewVaccine")
+                : t(locale, "addVaccine")}
         </button>
       </div>
     );

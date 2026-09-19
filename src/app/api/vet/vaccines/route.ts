@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireVetSession } from "@/lib/auth";
-import { validUntilFromGiven } from "@/lib/herd";
+import { isLifetimeVaccineMonths, rescheduleExistingVaccination } from "@/lib/herd";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -22,6 +22,8 @@ const createSchema = z.object({
   name: z.string().min(1).max(80),
   description: z.string().max(800).optional(),
   validMonths: z.number().int().min(0).max(60),
+  boosterEnabled: z.boolean().optional(),
+  boosterAfterDays: z.number().int().min(1).max(365).optional(),
 });
 
 export async function POST(request: Request) {
@@ -54,6 +56,10 @@ export async function POST(request: Request) {
       name,
       description: (parsed.data.description || "").trim(),
       validMonths: parsed.data.validMonths,
+      boosterEnabled:
+        !isLifetimeVaccineMonths(parsed.data.validMonths) &&
+        Boolean(parsed.data.boosterEnabled),
+      boosterAfterDays: parsed.data.boosterAfterDays || 7,
     },
   });
 
@@ -65,6 +71,8 @@ const patchSchema = z.object({
   name: z.string().min(1).max(80).optional(),
   description: z.string().max(800).optional(),
   validMonths: z.number().int().min(0).max(60).optional(),
+  boosterEnabled: z.boolean().optional(),
+  boosterAfterDays: z.number().int().min(1).max(365).optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -99,7 +107,17 @@ export async function PATCH(request: Request) {
     }
   }
 
-  const months = parsed.data.validMonths ?? existing.validMonths;
+  const nextMonths = parsed.data.validMonths ?? existing.validMonths;
+  const nextBoosterEnabled =
+    parsed.data.boosterEnabled !== undefined
+      ? parsed.data.boosterEnabled
+      : existing.boosterEnabled;
+  const nextDays = parsed.data.boosterAfterDays ?? existing.boosterAfterDays;
+  const scheduleChanged =
+    parsed.data.validMonths !== undefined ||
+    parsed.data.boosterEnabled !== undefined ||
+    parsed.data.boosterAfterDays !== undefined;
+
   const vaccine = await prisma.vaccineType.update({
     where: { id: existing.id },
     data: {
@@ -110,19 +128,34 @@ export async function PATCH(request: Request) {
       ...(parsed.data.validMonths !== undefined
         ? { validMonths: parsed.data.validMonths }
         : {}),
+      ...(parsed.data.boosterEnabled !== undefined ||
+      parsed.data.validMonths !== undefined
+        ? {
+            boosterEnabled:
+              !isLifetimeVaccineMonths(nextMonths) && nextBoosterEnabled,
+          }
+        : {}),
+      ...(parsed.data.boosterAfterDays !== undefined
+        ? { boosterAfterDays: parsed.data.boosterAfterDays }
+        : {}),
     },
   });
 
-  if (parsed.data.validMonths !== undefined) {
+  if (scheduleChanged) {
     const records = await prisma.animalVaccination.findMany({
       where: { vaccineTypeId: vaccine.id },
     });
+    const plan = {
+      validMonths: vaccine.validMonths,
+      boosterEnabled: vaccine.boosterEnabled,
+      boosterAfterDays: nextDays,
+    };
     for (const record of records) {
-      if (!record.givenAt) continue;
-      const untilKey = validUntilFromGiven(record.givenAt, months);
+      const next = rescheduleExistingVaccination(plan, record);
+      if (!next) continue;
       await prisma.animalVaccination.update({
         where: { id: record.id },
-        data: { validUntil: new Date(`${untilKey}T00:00:00.000Z`) },
+        data: next,
       });
     }
   }

@@ -11,7 +11,14 @@ export async function GET(request: Request) {
   const vaccines = await prisma.vaccineType.findMany({
     where: { veterinarianId: auth.breeder.veterinarianId },
     orderBy: { createdAt: "asc" },
-    select: { id: true, name: true, description: true, validMonths: true },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      validMonths: true,
+      boosterEnabled: true,
+      boosterAfterDays: true,
+    },
   });
 
   return NextResponse.json({ vaccines });

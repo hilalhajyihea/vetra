@@ -10,6 +10,7 @@ import { t, type Locale, type MsgKey } from "@/lib/i18n";
 type EventKind =
   | "vaccine"
   | "vaccineGiven"
+  | "vaccineBooster"
   | "sponge"
   | "hormone"
   | "mating"
@@ -62,6 +63,7 @@ const WEEKDAY_KEYS = [
 const EVENT_KEYS: Record<Exclude<EventKind, "appointment">, MsgKey> = {
   vaccine: "eventVaccineDue",
   vaccineGiven: "eventVaccineGiven",
+  vaccineBooster: "eventVaccineBooster",
   sponge: "eventSponge",
   hormone: "eventHormone",
   mating: "eventMating",
@@ -163,6 +165,9 @@ export function FarmCalendar({ locale: localeProp, farmId }: Props) {
     }
     if (event.kind === "vaccineGiven") {
       return t(locale, "eventVaccineGiven", { name: event.name || "" });
+    }
+    if (event.kind === "vaccineBooster") {
+      return t(locale, "eventVaccineBooster", { name: event.name || "" });
     }
     return t(locale, EVENT_KEYS[event.kind]);
   }

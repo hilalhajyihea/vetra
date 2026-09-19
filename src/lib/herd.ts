@@ -76,6 +76,12 @@ export function parseOptionalDate(value: string | null | undefined) {
   return new Date(`${toDateKey(value)}T00:00:00.000Z`);
 }
 
+export function addDaysToDateKey(dateKey: string, days: number) {
+  const [year, month, day] = toDateKey(dateKey).split("-").map(Number);
+  const result = new Date(Date.UTC(year, month - 1, day + days));
+  return result.toISOString().slice(0, 10);
+}
+
 export function addMonthsToDateKey(dateKey: string, months: number) {
   const [year, month, day] = toDateKey(dateKey).split("-").map(Number);
   const targetMonthIndex = month - 1 + months;
@@ -88,6 +94,65 @@ export function addMonthsToDateKey(dateKey: string, months: number) {
 export function validUntilFromGiven(givenAt: Date | string, months: number) {
   if (isLifetimeVaccineMonths(months)) return VACCINE_LIFETIME_UNTIL;
   return addMonthsToDateKey(toDateKey(givenAt), months);
+}
+
+export type VaccineTypePlan = {
+  validMonths: number;
+  boosterEnabled: boolean;
+  boosterAfterDays: number;
+};
+
+export function usesBoosterProtocol(type: VaccineTypePlan) {
+  return (
+    type.boosterEnabled &&
+    !isLifetimeVaccineMonths(type.validMonths) &&
+    type.boosterAfterDays > 0
+  );
+}
+
+export function dateFromKey(key: string) {
+  return new Date(`${toDateKey(key)}T00:00:00.000Z`);
+}
+
+export function vaccinationSchedule(
+  type: VaccineTypePlan,
+  givenAt: Date | string,
+  existing: { courseStage?: string | null } | null,
+) {
+  const given = toDateKey(givenAt);
+  if (usesBoosterProtocol(type) && !existing) {
+    const due = addDaysToDateKey(given, type.boosterAfterDays);
+    return {
+      courseStage: "PRIME" as const,
+      boosterDueAt: dateFromKey(due),
+      validUntil: dateFromKey(due),
+    };
+  }
+  return {
+    courseStage: "COMPLETE" as const,
+    boosterDueAt: null,
+    validUntil: dateFromKey(validUntilFromGiven(given, type.validMonths)),
+  };
+}
+
+export function rescheduleExistingVaccination(
+  type: VaccineTypePlan,
+  record: { givenAt: Date | string | null; courseStage: string },
+) {
+  if (!record.givenAt) return null;
+  if (record.courseStage === "PRIME" && usesBoosterProtocol(type)) {
+    const due = addDaysToDateKey(record.givenAt, type.boosterAfterDays);
+    return {
+      courseStage: "PRIME" as const,
+      boosterDueAt: dateFromKey(due),
+      validUntil: dateFromKey(due),
+    };
+  }
+  return {
+    courseStage: "COMPLETE" as const,
+    boosterDueAt: null,
+    validUntil: dateFromKey(validUntilFromGiven(record.givenAt, type.validMonths)),
+  };
 }
 
 export function formatVaccineUntil(

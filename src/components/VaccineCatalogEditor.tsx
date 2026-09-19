@@ -10,6 +10,8 @@ type Vaccine = {
   name: string;
   description: string;
   validMonths: number;
+  boosterEnabled?: boolean;
+  boosterAfterDays?: number;
 };
 
 export function VaccineCatalogEditor({ locale: localeProp }: { locale: Locale }) {
@@ -21,11 +23,15 @@ export function VaccineCatalogEditor({ locale: localeProp }: { locale: Locale })
   const [description, setDescription] = useState("");
   const [validMonths, setValidMonths] = useState(12);
   const [lifetime, setLifetime] = useState(false);
+  const [booster, setBooster] = useState(false);
+  const [boosterDays, setBoosterDays] = useState(7);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editMonths, setEditMonths] = useState(12);
   const [editLifetime, setEditLifetime] = useState(false);
+  const [editBooster, setEditBooster] = useState(false);
+  const [editBoosterDays, setEditBoosterDays] = useState(7);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -54,6 +60,8 @@ export function VaccineCatalogEditor({ locale: localeProp }: { locale: Locale })
         name,
         description,
         validMonths: lifetime ? 0 : validMonths,
+        boosterEnabled: !lifetime && booster,
+        boosterAfterDays: boosterDays,
       }),
     });
     if (res.status === 409) {
@@ -68,6 +76,8 @@ export function VaccineCatalogEditor({ locale: localeProp }: { locale: Locale })
     setDescription("");
     setValidMonths(12);
     setLifetime(false);
+    setBooster(false);
+    setBoosterDays(7);
     load();
   }
 
@@ -81,6 +91,8 @@ export function VaccineCatalogEditor({ locale: localeProp }: { locale: Locale })
         name: editName,
         description: editDescription,
         validMonths: editLifetime ? 0 : editMonths,
+        boosterEnabled: !editLifetime && editBooster,
+        boosterAfterDays: editBoosterDays,
       }),
     });
     if (res.status === 409) {
@@ -140,7 +152,10 @@ export function VaccineCatalogEditor({ locale: localeProp }: { locale: Locale })
           <input
             type="checkbox"
             checked={lifetime}
-            onChange={(e) => setLifetime(e.target.checked)}
+            onChange={(e) => {
+              setLifetime(e.target.checked);
+              if (e.target.checked) setBooster(false);
+            }}
           />
           {t(locale, "vaccineLifetime")}
         </label>
@@ -149,18 +164,42 @@ export function VaccineCatalogEditor({ locale: localeProp }: { locale: Locale })
             {t(locale, "vaccineLifetimeUntil")}
           </p>
         ) : (
-          <label className="mt-2 block text-sm">
-            {t(locale, "vaccineValidMonths")}
-            <input
-              type="number"
-              min={1}
-              max={60}
-              className="shop-field mt-1 w-full rounded-xl px-3 py-2.5"
-              value={validMonths}
-              onChange={(e) => setValidMonths(Number(e.target.value) || 1)}
-              required
-            />
-          </label>
+          <>
+            <label className="mt-2 block text-sm">
+              {t(locale, "vaccineValidMonths")}
+              <input
+                type="number"
+                min={1}
+                max={60}
+                className="shop-field mt-1 w-full rounded-xl px-3 py-2.5"
+                value={validMonths}
+                onChange={(e) => setValidMonths(Number(e.target.value) || 1)}
+                required
+              />
+            </label>
+            <label className="mt-3 flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={booster}
+                onChange={(e) => setBooster(e.target.checked)}
+              />
+              {t(locale, "vaccineBooster")}
+            </label>
+            {booster ? (
+              <label className="mt-2 block text-sm">
+                {t(locale, "vaccineBoosterDays")}
+                <input
+                  type="number"
+                  min={1}
+                  max={365}
+                  className="shop-field mt-1 w-full rounded-xl px-3 py-2.5"
+                  value={boosterDays}
+                  onChange={(e) => setBoosterDays(Number(e.target.value) || 1)}
+                  required
+                />
+              </label>
+            ) : null}
+          </>
         )}
         <button
           type="submit"
@@ -192,30 +231,58 @@ export function VaccineCatalogEditor({ locale: localeProp }: { locale: Locale })
                     onChange={(e) => setEditDescription(e.target.value)}
                   />
                   <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={editLifetime}
-                      onChange={(e) => setEditLifetime(e.target.checked)}
-                    />
-                    {t(locale, "vaccineLifetime")}
-                  </label>
-                  {editLifetime ? (
-                    <p className="text-sm text-[rgba(244,239,230,0.62)]">
-                      {t(locale, "vaccineLifetimeUntil")}
-                    </p>
-                  ) : (
-                    <label className="text-sm">
-                      {t(locale, "vaccineValidMonths")}
                       <input
-                        type="number"
-                        min={1}
-                        max={60}
-                        className="shop-field mt-1 w-full rounded-xl px-3 py-2.5"
-                        value={editMonths}
-                        onChange={(e) => setEditMonths(Number(e.target.value) || 1)}
+                        type="checkbox"
+                        checked={editLifetime}
+                        onChange={(e) => {
+                          setEditLifetime(e.target.checked);
+                          if (e.target.checked) setEditBooster(false);
+                        }}
                       />
+                      {t(locale, "vaccineLifetime")}
                     </label>
-                  )}
+                    {editLifetime ? (
+                      <p className="text-sm text-[rgba(244,239,230,0.62)]">
+                        {t(locale, "vaccineLifetimeUntil")}
+                      </p>
+                    ) : (
+                      <>
+                        <label className="text-sm">
+                          {t(locale, "vaccineValidMonths")}
+                          <input
+                            type="number"
+                            min={1}
+                            max={60}
+                            className="shop-field mt-1 w-full rounded-xl px-3 py-2.5"
+                            value={editMonths}
+                            onChange={(e) => setEditMonths(Number(e.target.value) || 1)}
+                          />
+                        </label>
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={editBooster}
+                            onChange={(e) => setEditBooster(e.target.checked)}
+                          />
+                          {t(locale, "vaccineBooster")}
+                        </label>
+                        {editBooster ? (
+                          <label className="text-sm">
+                            {t(locale, "vaccineBoosterDays")}
+                            <input
+                              type="number"
+                              min={1}
+                              max={365}
+                              className="shop-field mt-1 w-full rounded-xl px-3 py-2.5"
+                              value={editBoosterDays}
+                              onChange={(e) =>
+                                setEditBoosterDays(Number(e.target.value) || 1)
+                              }
+                            />
+                          </label>
+                        ) : null}
+                      </>
+                    )}
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
@@ -239,7 +306,11 @@ export function VaccineCatalogEditor({ locale: localeProp }: { locale: Locale })
                   <p className="mt-1 text-sm text-[rgba(244,239,230,0.62)]">
                     {isLifetimeVaccineMonths(vaccine.validMonths)
                       ? `${t(locale, "vaccineLifetime")} · ${t(locale, "vaccineLifetimeUntil")}`
-                      : `${t(locale, "vaccineValidMonths")}: ${vaccine.validMonths} ${t(locale, "vaccineMonthsUnit")}`}
+                      : `${t(locale, "vaccineValidMonths")}: ${vaccine.validMonths} ${t(locale, "vaccineMonthsUnit")}${
+                          vaccine.boosterEnabled
+                            ? ` · ${t(locale, "vaccineBooster")} · ${vaccine.boosterAfterDays || 7} ${t(locale, "vaccineBoosterDaysUnit")}`
+                            : ""
+                        }`}
                   </p>
                   <p className="mt-1 text-sm text-[rgba(244,239,230,0.62)]">
                     {vaccine.description || t(locale, "noVaccineInfo")}
@@ -258,6 +329,8 @@ export function VaccineCatalogEditor({ locale: localeProp }: { locale: Locale })
                             : vaccine.validMonths,
                         );
                         setEditLifetime(isLifetimeVaccineMonths(vaccine.validMonths));
+                        setEditBooster(Boolean(vaccine.boosterEnabled));
+                        setEditBoosterDays(vaccine.boosterAfterDays || 7);
                       }}
                     >
                       {t(locale, "editVaccine")}

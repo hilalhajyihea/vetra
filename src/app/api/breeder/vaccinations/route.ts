@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { farmIdFromRequest, requireFarmAccess } from "@/lib/breederSession";
-import { animalNumbersMatch, toDateKey, validUntilFromGiven } from "@/lib/herd";
+import { animalNumbersMatch, toDateKey, vaccinationSchedule } from "@/lib/herd";
 import { prisma } from "@/lib/prisma";
 
 const createSchema = z
@@ -45,10 +45,15 @@ async function findVaccineType(
 async function applyVaccination(
   auth: FarmAuth,
   animalId: string,
-  type: { id: string; name: string; validMonths: number },
+  type: {
+    id: string;
+    name: string;
+    validMonths: number;
+    boosterEnabled: boolean;
+    boosterAfterDays: number;
+  },
   givenKey: string,
 ) {
-  const untilKey = validUntilFromGiven(givenKey, type.validMonths);
   const existing = await prisma.animalVaccination.findFirst({
     where: {
       animalId,
@@ -56,12 +61,15 @@ async function applyVaccination(
     },
     orderBy: { validUntil: "desc" },
   });
+  const schedule = vaccinationSchedule(type, givenKey, existing);
 
   const data = {
     vaccineTypeId: type.id,
     name: type.name,
     givenAt: new Date(`${givenKey}T00:00:00.000Z`),
-    validUntil: new Date(`${untilKey}T00:00:00.000Z`),
+    validUntil: schedule.validUntil,
+    courseStage: schedule.courseStage,
+    boosterDueAt: schedule.boosterDueAt,
     status: auth.actor === "vet" ? "APPROVED" : "PENDING",
   };
 

@@ -10,12 +10,12 @@ import {
   GENE_TYPES,
   isGeneType,
   isLifetimeVaccineMonths,
-  isVaccineValid,
   jerusalemTodayKey,
   toDateKey,
   type GeneType,
 } from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
+import { vaccinationBoardStatus } from "@/lib/vaccineBoard";
 import {
   formatLambingStat,
   serializeLambing,
@@ -29,6 +29,8 @@ type Vaccine = {
   givenAt?: string | null;
   validUntil: string;
   status?: string;
+  courseStage?: string;
+  boosterDueAt?: string | null;
 };
 
 type Animal = {
@@ -69,6 +71,8 @@ type VaccineType = {
   id: string;
   name: string;
   validMonths?: number;
+  boosterEnabled?: boolean;
+  boosterAfterDays?: number;
 };
 
 type Props = {
@@ -481,14 +485,28 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
         <ul className="mt-1 flex flex-col gap-1">
           {animal.vaccinations.map((v) => {
             const pending = v.status === "PENDING";
-            const valid = isVaccineValid(v.validUntil);
+            const board = vaccinationBoardStatus(v);
+            const due = v.boosterDueAt || v.validUntil;
+            const label = pending
+              ? t(locale, "vaccinePending")
+              : board.status === "booster"
+                ? t(locale, "vaccineBoosterUntil", {
+                    date: formatIsraelDate(due),
+                  })
+                : board.needsBooster && board.status === "expired"
+                  ? t(locale, "vaccineBoosterOverdue", {
+                      date: formatIsraelDate(due),
+                    })
+                  : board.status === "valid"
+                    ? t(locale, "vaccineValid")
+                    : t(locale, "vaccineExpired");
             return (
               <li
                 key={v.id}
                 className={`flex flex-wrap items-center gap-2 rounded-lg px-2 py-1 text-xs font-semibold ${
-                  pending
+                  pending || board.status === "booster"
                     ? "bg-amber-900/70 text-[var(--hay)]"
-                    : valid
+                    : board.status === "valid"
                       ? "bg-emerald-900/70 text-emerald-200"
                       : "bg-red-900/70 text-red-200"
                 }`}
@@ -496,14 +514,10 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                 <span>
                   {v.name}
                   {v.givenAt ? ` · ${formatIsraelDate(v.givenAt)}` : ""}
-                  {` · ${formatVaccineUntil(locale, v.validUntil)}`}
-                  {` · ${
-                    pending
-                      ? t(locale, "vaccinePending")
-                      : valid
-                        ? t(locale, "vaccineValid")
-                        : t(locale, "vaccineExpired")
-                  }`}
+                  {board.status === "booster" || board.needsBooster
+                    ? ` · ${formatIsraelDate(due)}`
+                    : ` · ${formatVaccineUntil(locale, v.validUntil)}`}
+                  {` · ${label}`}
                 </span>
                 {farmId && pending ? (
                   <button
@@ -554,7 +568,9 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                   {type.name}
                   {isLifetimeVaccineMonths(type.validMonths ?? 1)
                     ? ` (${t(locale, "vaccineLifetime")})`
-                    : ` (${type.validMonths} ${t(locale, "vaccineMonthsUnit")})`}
+                    : type.boosterEnabled
+                      ? ` (${t(locale, "vaccineBooster")} · ${type.boosterAfterDays || 7} ${t(locale, "vaccineBoosterDaysUnit")} · ${type.validMonths} ${t(locale, "vaccineMonthsUnit")})`
+                      : ` (${type.validMonths} ${t(locale, "vaccineMonthsUnit")})`}
                 </option>
               ))}
             </select>
