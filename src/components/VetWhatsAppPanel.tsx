@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUiLocale } from "@/components/LocaleProvider";
 import { t, type Locale } from "@/lib/i18n";
-import { fillWhatsAppTemplate, insertPlaceholder } from "@/lib/whatsapp";
+import {
+  fillWhatsAppTemplate,
+  formatVetraNotification,
+  insertPlaceholder,
+} from "@/lib/whatsapp";
 
 type BreederRow = {
   id: string;
@@ -78,7 +82,10 @@ export function VetWhatsAppPanel({
   }
 
   const preview = previewTarget
-    ? fillWhatsAppTemplate(text, varsFor(previewTarget))
+    ? formatVetraNotification(
+        varsFor(previewTarget),
+        fillWhatsAppTemplate(text, varsFor(previewTarget)),
+      )
     : text;
 
   function toggle(id: string) {

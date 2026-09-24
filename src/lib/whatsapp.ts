@@ -11,6 +11,17 @@ export function fillWhatsAppTemplate(template: string, vars: WhatsAppVars) {
     .replaceAll("{קליניקה}", vars.clinic);
 }
 
+export function formatVetraNotification(vars: WhatsAppVars, body: string) {
+  const update = body.trim() || "—";
+  return `שלום ${vars.name || "—"},
+להלן עדכון מהווטרינר עבור החווה ${vars.farm || "—"}:
+
+${update}
+
+בברכה,
+הווטרינר המטפל`;
+}
+
 export function insertPlaceholder(template: string, token: string) {
   if (!template) return token;
   const needsSpace = !/\s$/.test(template);

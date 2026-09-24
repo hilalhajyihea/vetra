@@ -21,7 +21,7 @@ export function whatsappConfigured() {
 }
 
 function templateName() {
-  return env("WHATSAPP_TEMPLATE_NAME") || "hello_world";
+  return env("WHATSAPP_TEMPLATE_NAME") || "vetra_notification_ut";
 }
 
 function templateLanguage() {
@@ -31,8 +31,8 @@ function templateLanguage() {
 
 function templateParamCount() {
   const raw = env("WHATSAPP_TEMPLATE_BODY_PARAMS");
-  if (raw === "0" || raw === "1" || raw === "2") return Number(raw);
-  return templateName() === "hello_world" ? 0 : 1;
+  if (raw === "0" || raw === "1" || raw === "2" || raw === "3") return Number(raw);
+  return templateName() === "hello_world" ? 0 : 3;
 }
 
 function sanitizeParam(value: string) {
@@ -43,6 +43,7 @@ function sanitizeParam(value: string) {
 export async function sendWhatsAppTemplate(input: {
   to: string;
   name: string;
+  farm: string;
   body: string;
 }) {
   const token = accessToken();
@@ -61,7 +62,9 @@ export async function sendWhatsAppTemplate(input: {
   const params =
     paramCount <= 1
       ? [filled]
-      : [sanitizeParam(input.name), filled];
+      : paramCount === 2
+        ? [sanitizeParam(input.name), filled]
+        : [sanitizeParam(input.name), sanitizeParam(input.farm), filled];
   const template: Record<string, unknown> = {
     name,
     language: { code: templateLanguage() },

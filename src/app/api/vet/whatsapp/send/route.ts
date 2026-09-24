@@ -109,6 +109,7 @@ export async function POST(request: Request) {
     const sent = await sendWhatsAppTemplate({
       to: breeder.phone,
       name: breeder.firstName,
+      farm: breeder.farmName,
       body,
     });
     if (sent.ok) {
