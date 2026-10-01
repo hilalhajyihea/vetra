@@ -11,7 +11,7 @@ export function isLifetimeValidUntil(value: Date | string | null | undefined) {
   return toDateKey(value) >= "9000-01-01";
 }
 
-export const GENE_TYPES = ["++", "p+", "pp"] as const;
+export const GENE_TYPES = ["++", "+B", "BB"] as const;
 export type GeneType = (typeof GENE_TYPES)[number];
 
 export function isGeneType(value: string): value is GeneType {

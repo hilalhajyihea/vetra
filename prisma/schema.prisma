@@ -81,7 +81,7 @@ model Animal {
   number    String
   /// MALE | FEMALE
   sex       String
-  /// ++ | p+ | pp
+  /// ++ | +B | BB
   geneType  String   @default("")
   birthDate DateTime @db.Date
   pregnant  Boolean  @default(false)
