@@ -11,6 +11,7 @@ type EventKind =
   | "hormone"
   | "mating"
   | "lambing"
+  | "expectedLambing"
   | "checkup1"
   | "checkup2"
   | "appointment";
@@ -117,6 +118,10 @@ export async function GET(request: Request) {
         groupName,
       });
     }
+    pushEvent(events, animal.expectedLambingDate, "expectedLambing", {
+      animalNumber: animal.number,
+      groupName,
+    });
     pushEvent(events, animal.checkup1Date, "checkup1", {
       animalNumber: animal.number,
       groupName,

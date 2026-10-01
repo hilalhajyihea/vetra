@@ -89,6 +89,7 @@ model Animal {
   hormoneDate    DateTime? @db.Date
   matingDate     DateTime? @db.Date
   lambingDate    DateTime? @db.Date
+  expectedLambingDate DateTime? @db.Date
   checkup1Date   DateTime? @db.Date
   checkup2Date   DateTime? @db.Date
   /// leftover: SPONGE | HORMONE | AI

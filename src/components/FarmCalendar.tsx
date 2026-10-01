@@ -15,6 +15,7 @@ type EventKind =
   | "hormone"
   | "mating"
   | "lambing"
+  | "expectedLambing"
   | "checkup1"
   | "checkup2"
   | "appointment";
@@ -68,6 +69,7 @@ const EVENT_KEYS: Record<Exclude<EventKind, "appointment">, MsgKey> = {
   hormone: "eventHormone",
   mating: "eventMating",
   lambing: "eventLambing",
+  expectedLambing: "eventExpectedLambing",
   checkup1: "eventCheckup1",
   checkup2: "eventCheckup2",
 };

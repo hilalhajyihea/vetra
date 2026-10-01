@@ -13,6 +13,7 @@ function serializeFemale(animal: {
   matingDate: Date | null;
   checkup1Date: Date | null;
   checkup2Date: Date | null;
+  expectedLambingDate: Date | null;
 }) {
   return {
     id: animal.id,
@@ -23,6 +24,7 @@ function serializeFemale(animal: {
     matingDate: dateInputValue(animal.matingDate),
     checkup1Date: dateInputValue(animal.checkup1Date),
     checkup2Date: dateInputValue(animal.checkup2Date),
+    expectedLambingDate: dateInputValue(animal.expectedLambingDate),
   };
 }
 
@@ -60,6 +62,9 @@ export async function GET(request: Request) {
         matingDate: sharedValue(females.map((animal) => animal.matingDate)),
         checkup1Date: sharedValue(females.map((animal) => animal.checkup1Date)),
         checkup2Date: sharedValue(females.map((animal) => animal.checkup2Date)),
+        expectedLambingDate: sharedValue(
+          females.map((animal) => animal.expectedLambingDate),
+        ),
         females,
       };
     }),
@@ -75,6 +80,7 @@ const patchSchema = z.object({
   matingDate: z.string().optional(),
   checkup1Date: z.string().optional(),
   checkup2Date: z.string().optional(),
+  expectedLambingDate: z.string().optional(),
 });
 
 function pregnancyData(input: z.infer<typeof patchSchema>) {
@@ -85,6 +91,7 @@ function pregnancyData(input: z.infer<typeof patchSchema>) {
     matingDate: parseOptionalDate(input.matingDate),
     checkup1Date: parseOptionalDate(input.checkup1Date),
     checkup2Date: parseOptionalDate(input.checkup2Date),
+    expectedLambingDate: parseOptionalDate(input.expectedLambingDate),
   };
 }
 

@@ -82,6 +82,30 @@ export function addDaysToDateKey(dateKey: Date | string, days: number) {
   return result.toISOString().slice(0, 10);
 }
 
+export function pregnancyDatesFromSponge(spongeDate: string) {
+  const sponge = toDateKey(spongeDate);
+  if (!sponge) {
+    return {
+      hormoneDate: "",
+      checkup1Date: "",
+      checkup2Date: "",
+    };
+  }
+  const hormoneDate = addDaysToDateKey(sponge, 12);
+  const checkup1Date = addDaysToDateKey(sponge, 45);
+  return {
+    hormoneDate,
+    checkup1Date,
+    checkup2Date: addDaysToDateKey(checkup1Date, 14),
+  };
+}
+
+export function checkup2FromCheckup1(checkup1Date: string) {
+  const checkup1 = toDateKey(checkup1Date);
+  if (!checkup1) return "";
+  return addDaysToDateKey(checkup1, 14);
+}
+
 export function addMonthsToDateKey(dateKey: string, months: number) {
   const [year, month, day] = toDateKey(dateKey).split("-").map(Number);
   const targetMonthIndex = month - 1 + months;

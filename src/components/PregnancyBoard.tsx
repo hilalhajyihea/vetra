@@ -3,6 +3,10 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUiLocale } from "@/components/LocaleProvider";
+import {
+  checkup2FromCheckup1,
+  pregnancyDatesFromSponge,
+} from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
 
 type FemaleRow = {
@@ -14,6 +18,7 @@ type FemaleRow = {
   matingDate: string;
   checkup1Date: string;
   checkup2Date: string;
+  expectedLambingDate: string;
 };
 
 type GroupRow = {
@@ -25,6 +30,7 @@ type GroupRow = {
   matingDate: string;
   checkup1Date: string;
   checkup2Date: string;
+  expectedLambingDate: string;
   females: FemaleRow[];
 };
 
@@ -122,6 +128,7 @@ export function PregnancyBoard({ locale: localeProp, farmId }: Props) {
       matingDate: string;
       checkup1Date: string;
       checkup2Date: string;
+      expectedLambingDate: string;
     },
   ) {
     setError("");
@@ -346,6 +353,7 @@ type FieldValue = {
   matingDate: string;
   checkup1Date: string;
   checkup2Date: string;
+  expectedLambingDate: string;
 };
 
 function PregnancyFields({
@@ -367,10 +375,22 @@ function PregnancyFields({
         />
         {t(locale, "pregnant")}
       </label>
+      <p className="text-xs text-[rgba(244,239,230,0.62)] sm:col-span-2">
+        {t(locale, "pregnancySpongeHint")}
+      </p>
       <DateField
         label={t(locale, "spongeDate")}
         value={value.spongeDate}
-        onChange={(spongeDate) => onChange({ spongeDate })}
+        onChange={(spongeDate) => {
+          if (!spongeDate) {
+            onChange({ spongeDate });
+            return;
+          }
+          onChange({
+            spongeDate,
+            ...pregnancyDatesFromSponge(spongeDate),
+          });
+        }}
       />
       <DateField
         label={t(locale, "hormoneDate")}
@@ -385,12 +405,26 @@ function PregnancyFields({
       <DateField
         label={t(locale, "checkup1Date")}
         value={value.checkup1Date}
-        onChange={(checkup1Date) => onChange({ checkup1Date })}
+        onChange={(checkup1Date) => {
+          if (!checkup1Date) {
+            onChange({ checkup1Date });
+            return;
+          }
+          onChange({
+            checkup1Date,
+            checkup2Date: checkup2FromCheckup1(checkup1Date),
+          });
+        }}
       />
       <DateField
         label={t(locale, "checkup2Date")}
         value={value.checkup2Date}
         onChange={(checkup2Date) => onChange({ checkup2Date })}
+      />
+      <DateField
+        label={t(locale, "expectedLambingDate")}
+        value={value.expectedLambingDate || ""}
+        onChange={(expectedLambingDate) => onChange({ expectedLambingDate })}
       />
     </div>
   );
