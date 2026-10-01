@@ -8,7 +8,7 @@ const createSchema = z.object({
   groupId: z.string().min(1),
   number: z.string().min(1).max(40),
   sex: z.enum(["MALE", "FEMALE"]),
-  geneType: z.enum(GENE_TYPES),
+  geneType: z.union([z.enum(GENE_TYPES), z.literal("")]).optional(),
   birthDate: z.string().min(8),
   pregnant: z.boolean().optional(),
 });
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       groupId: group.id,
       number,
       sex: parsed.data.sex,
-      geneType: parsed.data.geneType,
+      geneType: parsed.data.geneType || "",
       birthDate: new Date(`${birthKey}T00:00:00.000Z`),
       pregnant: parsed.data.sex === "FEMALE" ? Boolean(parsed.data.pregnant) : false,
     },
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
 const patchSchema = z.object({
   id: z.string().min(1),
   pregnant: z.boolean().optional(),
-  geneType: z.enum(GENE_TYPES).optional(),
+  geneType: z.union([z.enum(GENE_TYPES), z.literal("")]).optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -102,7 +102,9 @@ export async function PATCH(request: Request) {
               animal.sex === "FEMALE" ? Boolean(parsed.data.pregnant) : false,
           }
         : {}),
-      ...(parsed.data.geneType ? { geneType: parsed.data.geneType } : {}),
+      ...(parsed.data.geneType !== undefined
+        ? { geneType: parsed.data.geneType }
+        : {}),
     },
   });
 

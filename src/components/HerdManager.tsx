@@ -221,10 +221,6 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
       setError(t(locale, "needGroupFirst"));
       return;
     }
-    if (!isGeneType(geneType)) {
-      setError(t(locale, "geneTypeChoose"));
-      return;
-    }
     const res = await fetch("/api/breeder/animals", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -232,7 +228,7 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
         groupId,
         number,
         sex,
-        geneType,
+        geneType: geneType || "",
         birthDate,
         pregnant: sex === "FEMALE" ? pregnant : false,
         farmId,
@@ -257,7 +253,7 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
     load();
   }
 
-  async function setAnimalGeneType(animal: Animal, next: GeneType) {
+  async function setAnimalGeneType(animal: Animal, next: GeneType | "") {
     setError("");
     const res = await fetch("/api/breeder/animals", {
       method: "PATCH",
@@ -782,15 +778,11 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                 className="shop-field rounded-lg px-2 py-1.5 text-sm"
                 value={isGeneType(animal.geneType || "") ? animal.geneType : ""}
                 onChange={(e) => {
-                  if (isGeneType(e.target.value)) {
-                    setAnimalGeneType(animal, e.target.value);
-                  }
+                  const next = e.target.value;
+                  setAnimalGeneType(animal, isGeneType(next) ? next : "");
                 }}
-                required
               >
-                <option value="" disabled>
-                  {t(locale, "geneTypeChoose")}
-                </option>
+                <option value="">{t(locale, "geneTypeChoose")}</option>
                 {GENE_TYPES.map((value) => (
                   <option key={value} value={value}>
                     {value}
@@ -897,11 +889,8 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                     const next = e.target.value;
                     setGeneType(isGeneType(next) ? next : "");
                   }}
-                  required
                 >
-                  <option value="" disabled>
-                    {t(locale, "geneTypeChoose")}
-                  </option>
+                  <option value="">{t(locale, "geneTypeChoose")}</option>
                   {GENE_TYPES.map((value) => (
                     <option key={value} value={value}>
                       {value}
@@ -1212,13 +1201,14 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                                       : ""
                                   }
                                   onChange={(e) => {
-                                    if (isGeneType(e.target.value)) {
-                                      setAnimalGeneType(animal, e.target.value);
-                                    }
+                                    const next = e.target.value;
+                                    setAnimalGeneType(
+                                      animal,
+                                      isGeneType(next) ? next : "",
+                                    );
                                   }}
-                                  required
                                 >
-                                  <option value="" disabled>
+                                  <option value="">
                                     {t(locale, "geneTypeChoose")}
                                   </option>
                                   {GENE_TYPES.map((value) => (
