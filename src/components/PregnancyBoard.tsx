@@ -3,10 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUiLocale } from "@/components/LocaleProvider";
-import {
-  checkup2FromCheckup1,
-  pregnancyDatesFromSponge,
-} from "@/lib/herd";
+import { pregnancyDatesFromSponge } from "@/lib/herd";
 import { t, type Locale } from "@/lib/i18n";
 
 type FemaleRow = {
@@ -405,16 +402,7 @@ function PregnancyFields({
       <DateField
         label={t(locale, "checkup1Date")}
         value={value.checkup1Date}
-        onChange={(checkup1Date) => {
-          if (!checkup1Date) {
-            onChange({ checkup1Date });
-            return;
-          }
-          onChange({
-            checkup1Date,
-            checkup2Date: checkup2FromCheckup1(checkup1Date),
-          });
-        }}
+        onChange={(checkup1Date) => onChange({ checkup1Date })}
       />
       <DateField
         label={t(locale, "checkup2Date")}

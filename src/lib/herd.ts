@@ -87,23 +87,22 @@ export function pregnancyDatesFromSponge(spongeDate: string) {
   if (!sponge) {
     return {
       hormoneDate: "",
+      matingDate: "",
       checkup1Date: "",
       checkup2Date: "",
+      expectedLambingDate: "",
     };
   }
   const hormoneDate = addDaysToDateKey(sponge, 12);
-  const checkup1Date = addDaysToDateKey(sponge, 45);
+  const matingDate = addDaysToDateKey(hormoneDate, 2);
+  const checkup1Date = addDaysToDateKey(matingDate, 45);
   return {
     hormoneDate,
+    matingDate,
     checkup1Date,
     checkup2Date: addDaysToDateKey(checkup1Date, 14),
+    expectedLambingDate: addDaysToDateKey(matingDate, 147),
   };
-}
-
-export function checkup2FromCheckup1(checkup1Date: string) {
-  const checkup1 = toDateKey(checkup1Date);
-  if (!checkup1) return "";
-  return addDaysToDateKey(checkup1, 14);
 }
 
 export function addMonthsToDateKey(dateKey: string, months: number) {
