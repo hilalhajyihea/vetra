@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { farmIdFromRequest, requireFarmAccess } from "@/lib/breederSession";
-import { GENE_TYPES, jerusalemTodayKey, toDateKey } from "@/lib/herd";
+import { GENE_TYPES, animalNumbersMatch, jerusalemTodayKey, toDateKey } from "@/lib/herd";
 import { prisma } from "@/lib/prisma";
 
 const createSchema = z.object({
@@ -65,11 +65,17 @@ export async function POST(request: Request) {
   return NextResponse.json({ animal });
 }
 
-const patchSchema = z.object({
-  id: z.string().min(1),
-  pregnant: z.boolean().optional(),
-  geneType: z.union([z.enum(GENE_TYPES), z.literal("")]).optional(),
-});
+const patchSchema = z
+  .object({
+    id: z.string().min(1).optional(),
+    numbers: z.array(z.string().min(1).max(40)).max(300).optional(),
+    groupId: z.string().min(1).optional(),
+    pregnant: z.boolean().optional(),
+    geneType: z.union([z.enum(GENE_TYPES), z.literal("")]).optional(),
+  })
+  .refine(
+    (data) => Boolean(data.id) || (data.numbers && data.numbers.length > 0),
+  );
 
 export async function PATCH(request: Request) {
   const body = await request.json();
@@ -80,6 +86,58 @@ export async function PATCH(request: Request) {
 
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
+    return NextResponse.json({ error: "נתונים לא תקינים" }, { status: 400 });
+  }
+
+  let nextGroupId: string | undefined;
+  if (parsed.data.groupId) {
+    const group = await prisma.animalGroup.findFirst({
+      where: { id: parsed.data.groupId, breederId: auth.breeder.id },
+    });
+    if (!group) {
+      return NextResponse.json({ error: "קבוצה לא נמצאה" }, { status: 404 });
+    }
+    nextGroupId = group.id;
+  }
+
+  if (parsed.data.numbers?.length) {
+    if (!nextGroupId) {
+      return NextResponse.json({ error: "נתונים לא תקינים" }, { status: 400 });
+    }
+    const wanted = [
+      ...new Set(
+        parsed.data.numbers.map((value) => value.trim()).filter(Boolean),
+      ),
+    ];
+    const animals = await prisma.animal.findMany({
+      where: { breederId: auth.breeder.id },
+      select: { id: true, number: true, groupId: true },
+    });
+    const missing: string[] = [];
+    const matchedIds: string[] = [];
+    for (const number of wanted) {
+      const animal = animals.find((item) =>
+        animalNumbersMatch(item.number, number),
+      );
+      if (!animal) {
+        missing.push(number);
+        continue;
+      }
+      if (!matchedIds.includes(animal.id)) matchedIds.push(animal.id);
+    }
+    if (matchedIds.length) {
+      await prisma.animal.updateMany({
+        where: { id: { in: matchedIds }, breederId: auth.breeder.id },
+        data: { groupId: nextGroupId },
+      });
+    }
+    return NextResponse.json({
+      moved: matchedIds.length,
+      missing,
+    });
+  }
+
+  if (!parsed.data.id) {
     return NextResponse.json({ error: "נתונים לא תקינים" }, { status: 400 });
   }
 
@@ -105,6 +163,7 @@ export async function PATCH(request: Request) {
       ...(parsed.data.geneType !== undefined
         ? { geneType: parsed.data.geneType }
         : {}),
+      ...(nextGroupId ? { groupId: nextGroupId } : {}),
     },
   });
 

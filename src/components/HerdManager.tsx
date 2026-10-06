@@ -11,6 +11,7 @@ import {
   isGeneType,
   isLifetimeVaccineMonths,
   jerusalemTodayKey,
+  parseAnimalNumbers,
   toDateKey,
   type GeneType,
 } from "@/lib/herd";
@@ -38,6 +39,7 @@ type Animal = {
   number: string;
   sex: string;
   geneType?: string;
+  groupId?: string;
   birthDate: string;
   pregnant: boolean;
   vaccinations: Vaccine[];
@@ -117,6 +119,9 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
       { lambedAt: string; bornCount: string; aliveCount: string; note: string }
     >
   >({});
+  const [moveNumbers, setMoveNumbers] = useState("");
+  const [moveGroupId, setMoveGroupId] = useState("");
+  const [moveSaving, setMoveSaving] = useState(false);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true);
@@ -134,7 +139,12 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
       const list: Group[] = data.groups || [];
       setGroups(list);
       setVaccineTypes(typesData.vaccines || []);
-      setGroupId((prev) => prev || list[0]?.id || "");
+      setGroupId((prev) =>
+        list.some((group) => group.id === prev) ? prev : list[0]?.id || "",
+      );
+      setMoveGroupId((prev) =>
+        list.some((group) => group.id === prev) ? prev : list[0]?.id || "",
+      );
     } catch {
       setError(t(locale, "loadError"));
     } finally {
@@ -265,6 +275,69 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
       return;
     }
     load();
+  }
+
+  function currentGroupId(animal: Animal) {
+    return animal.groupId || selectedGroupId || "";
+  }
+
+  async function setAnimalGroup(animal: Animal, nextGroupId: string) {
+    if (!nextGroupId || nextGroupId === currentGroupId(animal)) return;
+    setError("");
+    const res = await fetch("/api/breeder/animals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: animal.id, groupId: nextGroupId, farmId }),
+    });
+    if (!res.ok) {
+      setError(t(locale, "updateFailed"));
+      return;
+    }
+    load();
+  }
+
+  async function moveAnimalsByNumbers() {
+    const numbers = parseAnimalNumbers(moveNumbers);
+    if (numbers.length === 0) {
+      setError(t(locale, "vaccineBulkEmpty"));
+      return;
+    }
+    if (!moveGroupId) {
+      setError(t(locale, "moveAnimalsNeedGroup"));
+      return;
+    }
+    setError("");
+    setMoveSaving(true);
+    try {
+      const res = await fetch("/api/breeder/animals", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          numbers,
+          groupId: moveGroupId,
+          farmId,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(t(locale, "updateFailed"));
+        return;
+      }
+      const missing: string[] = data.missing || [];
+      if (missing.length) {
+        setMoveNumbers(missing.join(" "));
+        setError(
+          t(locale, "vaccineBulkMissing", { numbers: missing.join(" ") }),
+        );
+      } else {
+        setMoveNumbers("");
+      }
+      await load();
+    } catch {
+      setError(t(locale, "updateFailed"));
+    } finally {
+      setMoveSaving(false);
+    }
   }
 
   async function togglePregnant(animal: Animal, next: boolean) {
@@ -790,6 +863,22 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                 ))}
               </select>
             </label>
+            {groups.length > 1 ? (
+              <label className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                {t(locale, "moveToGroup")}
+                <select
+                  className="shop-field rounded-lg px-2 py-1.5 text-sm"
+                  value={currentGroupId(animal)}
+                  onChange={(e) => setAnimalGroup(animal, e.target.value)}
+                >
+                  {groups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             {animal.sex === "FEMALE" ? (
               <label className="mt-2 flex items-center gap-2 text-sm">
                 <input
@@ -925,6 +1014,56 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
           )}
         </form>
       </div>
+
+      {groups.length > 1 ? (
+        <form
+          className="surface-dark mt-4 rounded-2xl p-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            moveAnimalsByNumbers();
+          }}
+        >
+          <h2 className="font-semibold">{t(locale, "moveAnimalsTitle")}</h2>
+          <p className="mt-1 text-sm text-[rgba(244,239,230,0.62)]">
+            {t(locale, "moveAnimalsLead")}
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-end">
+            <label className="text-sm">
+              {t(locale, "animalNumber")}
+              <input
+                className="shop-field mt-1 w-full rounded-xl px-3 py-2.5"
+                placeholder={t(locale, "vaccineBulkPlaceholder")}
+                value={moveNumbers}
+                onChange={(e) => setMoveNumbers(e.target.value)}
+              />
+            </label>
+            <label className="text-sm">
+              {t(locale, "moveToGroup")}
+              <select
+                className="shop-field mt-1 w-full rounded-xl px-3 py-2.5"
+                value={moveGroupId}
+                onChange={(e) => setMoveGroupId(e.target.value)}
+                required
+              >
+                {groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="submit"
+              disabled={moveSaving}
+              className="btn-primary rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-50"
+            >
+              {moveSaving
+                ? t(locale, "loading")
+                : t(locale, "vaccineBulkConfirm")}
+            </button>
+          </div>
+        </form>
+      ) : null}
 
       {error ? (
         <p className="mt-4 rounded-lg border border-red-400/30 bg-red-950/70 px-3 py-2 text-sm text-red-200">
@@ -1103,7 +1242,10 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                         key={animal.id}
                         className="rounded-xl border border-white/10 bg-black/20 p-4"
                       >
-                        {renderAnimalCard(animal)}
+                        {renderAnimalCard({
+                          ...animal,
+                          groupId: selectedGroup.id,
+                        })}
                       </li>
                     ))}
                   </ul>
@@ -1186,7 +1328,25 @@ export function HerdManager({ locale: localeProp, farmId }: Props) {
                               <td className="px-3 py-3 text-base font-semibold">
                                 {animal.number}
                               </td>
-                              <td className="px-3 py-3">{animal.groupName}</td>
+                              <td className="px-3 py-3">
+                                {groups.length > 1 ? (
+                                  <select
+                                    className="shop-field rounded-lg px-2 py-1.5 text-sm"
+                                    value={animal.groupId}
+                                    onChange={(e) =>
+                                      setAnimalGroup(animal, e.target.value)
+                                    }
+                                  >
+                                    {groups.map((group) => (
+                                      <option key={group.id} value={group.id}>
+                                        {group.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  animal.groupName
+                                )}
+                              </td>
                               <td className="px-3 py-3">
                                 {animal.sex === "FEMALE"
                                   ? t(locale, "sexFemale")
