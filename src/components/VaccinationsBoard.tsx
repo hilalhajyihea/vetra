@@ -95,6 +95,8 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
   const [bulkNumbers, setBulkNumbers] = useState("");
   const [bulkGivenAt, setBulkGivenAt] = useState("");
   const [bulkSaving, setBulkSaving] = useState(false);
+  const [groupGivenAt, setGroupGivenAt] = useState("");
+  const [groupSaving, setGroupSaving] = useState(false);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true);
@@ -237,6 +239,48 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
     }
   }
 
+  async function vaccinateGroup() {
+    if (!selected || !selectedGroup) return;
+    if (selectedGroup.count === 0) {
+      setError(t(locale, "vaccineGroupEmpty"));
+      return;
+    }
+    if (
+      !window.confirm(
+        t(locale, "vaccineGroupConfirm", {
+          count: selectedGroup.count,
+          group: selectedGroup.name,
+          vaccine: selected.name,
+        }),
+      )
+    ) {
+      return;
+    }
+    setError("");
+    setGroupSaving(true);
+    try {
+      const res = await fetch("/api/breeder/vaccinations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          groupId: selectedGroup.id,
+          vaccineTypeId: selected.id,
+          givenAt: groupGivenAt || today,
+          farmId,
+        }),
+      });
+      if (!res.ok) {
+        setError(t(locale, "updateFailed"));
+        return;
+      }
+      await load({ silent: true });
+    } catch {
+      setError(t(locale, "updateFailed"));
+    } finally {
+      setGroupSaving(false);
+    }
+  }
+
   function renewControls(animal: AnimalRow) {
     return (
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
@@ -266,6 +310,45 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
                 : t(locale, "addVaccine")}
         </button>
       </div>
+    );
+  }
+
+  function renderGroupVaccinate() {
+    if (!selectedGroup) return null;
+    return (
+      <form
+        className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          vaccinateGroup();
+        }}
+      >
+        <p className="text-sm font-semibold">{t(locale, "vaccineGroupTitle")}</p>
+        <p className="mt-1 text-xs text-[rgba(244,239,230,0.62)]">
+          {t(locale, "vaccineGroupLead")}
+        </p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-[auto_auto] sm:items-end">
+          <label className="text-xs">
+            {t(locale, "vaccineGiven")}
+            <input
+              type="date"
+              className="shop-field mt-1 w-full rounded-lg px-2 py-1.5 text-sm"
+              value={groupGivenAt || today}
+              onChange={(e) => setGroupGivenAt(e.target.value)}
+              required
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={groupSaving || selectedGroup.count === 0}
+            className="btn-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+          >
+            {groupSaving
+              ? t(locale, "renewingVaccine")
+              : t(locale, "vaccineGroupAction")}
+          </button>
+        </div>
+      </form>
     );
   }
 
@@ -476,6 +559,7 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
                   setOpenInfo(null);
                   setBulkNumbers("");
                   setBulkGivenAt("");
+                  setGroupGivenAt("");
                   setError("");
                 }}
                 className={`w-full rounded-2xl border px-4 py-4 text-right transition ${groupStatusClass(vaccine.status)}`}
@@ -581,6 +665,7 @@ export function VaccinationsBoard({ locale: localeProp, farmId }: Props) {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               ) : null}
+              {sortMode === "group" ? renderGroupVaccinate() : null}
               {renderBulkVaccinate()}
               {renderAnimalList(sortMode === "number")}
             </div>

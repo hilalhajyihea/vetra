@@ -266,6 +266,13 @@ const he = {
   vaccineBulkConfirm: "אישור",
   vaccineBulkEmpty: "הזינו לפחות מספר אחד",
   vaccineBulkMissing: "המספרים האלה לא נמצאו: {numbers}",
+  vaccineGroupTitle: "חיסון לכל הקבוצה",
+  vaccineGroupLead:
+    "כל החיות בקבוצה יקבלו את החיסון הזה בתאריך שנבחר. חיסונים אחרים של כל חיה נשארים.",
+  vaccineGroupAction: "חסן את כל הקבוצה",
+  vaccineGroupEmpty: "אין חיות בקבוצה",
+  vaccineGroupConfirm:
+    "לחסן {count} חיות בקבוצה {group} בחיסון {vaccine}?",
   moveToGroup: "העברה לקבוצה",
   moveAnimalsTitle: "העברת חיות לקבוצה",
   moveAnimalsLead:
@@ -750,6 +757,13 @@ const ar: { [K in keyof typeof he]: string } = {
   vaccineBulkConfirm: "موافقة",
   vaccineBulkEmpty: "أدخلوا رقمًا واحدًا على الأقل",
   vaccineBulkMissing: "هذه الأرقام غير موجودة: {numbers}",
+  vaccineGroupTitle: "تطعيم المجموعة كاملة",
+  vaccineGroupLead:
+    "كل حيوانات المجموعة ستحصل على هذا التطعيم في التاريخ المختار. تطعيمات كل حيوان الأخرى تبقى.",
+  vaccineGroupAction: "تطعيم كل المجموعة",
+  vaccineGroupEmpty: "لا حيوانات في المجموعة",
+  vaccineGroupConfirm:
+    "تطعيم {count} حيوانات في مجموعة {group} بتطعيم {vaccine}؟",
   moveToGroup: "نقل إلى مجموعة",
   moveAnimalsTitle: "نقل حيوانات إلى مجموعة",
   moveAnimalsLead:

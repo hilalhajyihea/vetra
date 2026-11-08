@@ -7,13 +7,17 @@ import { prisma } from "@/lib/prisma";
 const createSchema = z
   .object({
     animalId: z.string().min(1).optional(),
+    groupId: z.string().min(1).optional(),
     numbers: z.array(z.string().min(1).max(40)).max(300).optional(),
     vaccineTypeId: z.string().min(1).optional(),
     name: z.string().min(1).max(80).optional(),
     givenAt: z.string().min(8),
   })
   .refine(
-    (data) => Boolean(data.animalId) || (data.numbers && data.numbers.length > 0),
+    (data) =>
+      Boolean(data.animalId) ||
+      Boolean(data.groupId) ||
+      (data.numbers && data.numbers.length > 0),
   );
 
 type FarmAuth = NonNullable<Awaited<ReturnType<typeof requireFarmAccess>>>;
@@ -118,6 +122,23 @@ export async function POST(request: Request) {
     }
     const vaccination = await applyVaccination(auth, animal.id, type, givenKey);
     return NextResponse.json({ vaccination });
+  }
+
+  if (parsed.data.groupId) {
+    const group = await prisma.animalGroup.findFirst({
+      where: { id: parsed.data.groupId, breederId: auth.breeder.id },
+    });
+    if (!group) {
+      return NextResponse.json({ error: "קבוצה לא נמצאה" }, { status: 404 });
+    }
+    const animals = await prisma.animal.findMany({
+      where: { groupId: group.id, breederId: auth.breeder.id },
+      select: { id: true },
+    });
+    for (const animal of animals) {
+      await applyVaccination(auth, animal.id, type, givenKey);
+    }
+    return NextResponse.json({ vaccinated: animals.length });
   }
 
   const wanted = [
